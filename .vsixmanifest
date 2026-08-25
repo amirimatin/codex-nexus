@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+	<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+		<Metadata>
+			<Identity Language="en-US" Id="codex-nexus" Version="1.0.2" Publisher="amirimatin" />
+			<DisplayName>Codex Nexus</DisplayName>
+			<Description xml:space="preserve">AI model &amp; provider studio, custom chat typography, bidirectional RTL &amp; Arabic/Persian language suite for OpenAI Codex and VS Code AI Chat.</Description>
+			<Tags>codex,openai,font,persian,farsi,windows,rtl,ui,webview,chatgpt,readability,vazir,vazirmatn</Tags>
+			<Categories>Other</Categories>
+			<GalleryFlags>Public</GalleryFlags>
+			
+			<Properties>
+				<Property Id="Microsoft.VisualStudio.Code.Engine" Value="^1.96.0" />
+				<Property Id="Microsoft.VisualStudio.Code.ExtensionDependencies" Value="openai.chatgpt" />
+				<Property Id="Microsoft.VisualStudio.Code.ExtensionPack" Value="" />
+				<Property Id="Microsoft.VisualStudio.Code.ExtensionKind" Value="workspace" />
+				<Property Id="Microsoft.VisualStudio.Code.LocalizedLanguages" Value="" />
+				<Property Id="Microsoft.VisualStudio.Code.EnabledApiProposals" Value="" />
+				
+				<Property Id="Microsoft.VisualStudio.Code.ExecutesCode" Value="true" />
+				
+				<Property Id="Microsoft.VisualStudio.Services.Branding.Color" Value="#1f2937" />
+				<Property Id="Microsoft.VisualStudio.Services.Branding.Theme" Value="dark" />
+				<Property Id="Microsoft.VisualStudio.Services.GitHubFlavoredMarkdown" Value="true" />
+				<Property Id="Microsoft.VisualStudio.Services.Content.Pricing" Value="Free"/>
+
+				<Property Id="Microsoft.VisualStudio.Services.EnableMarketplaceQnA" Value="false" />
+				
+			</Properties>
+			<License>extension/LICENSE.md</License>
+			<Icon>extension/assets/512.png</Icon>
+		</Metadata>
+		<Installation>
+			<InstallationTarget Id="Microsoft.VisualStudio.Code"/>
+		</Installation>
+		<Dependencies/>
+		<Assets>
+			<Asset Type="Microsoft.VisualStudio.Code.Manifest" Path="extension/package.json" Addressable="true" />
+			<Asset Type="Microsoft.VisualStudio.Services.Content.Details" Path="extension/readme.md" Addressable="true" />
+<Asset Type="Microsoft.VisualStudio.Services.Content.Changelog" Path="extension/changelog.md" Addressable="true" />
+<Asset Type="Microsoft.VisualStudio.Services.Content.License" Path="extension/LICENSE.md" Addressable="true" />
+<Asset Type="Microsoft.VisualStudio.Services.Icons.Default" Path="extension/assets/512.png" Addressable="true" />
+		</Assets>
+	</PackageManifest>

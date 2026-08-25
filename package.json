@@ -1,0 +1,226 @@
+{
+	"name": "codex-nexus",
+	"displayName": "Codex Nexus",
+	"description": "Persian and Arabic RTL bidirectional text and typography engine with multi-provider AI model manager for OpenAI Codex in VS Code.",
+	"version": "1.0.2",
+	"publisher": "amirimatin",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/amirimatin/codex-nexus.git"
+	},
+	"homepage": "https://github.com/amirimatin/codex-nexus#readme",
+	"bugs": {
+		"url": "https://github.com/amirimatin/codex-nexus/issues"
+	},
+	"license": "MIT",
+	"author": {
+		"name": "Amiri Matin"
+	},
+	"engines": {
+		"vscode": "^1.96.0"
+	},
+	"icon": "assets/512.png",
+	"galleryBanner": {
+		"color": "#1f2937",
+		"theme": "dark"
+	},
+	"categories": [
+		"Other"
+	],
+	"keywords": [
+		"codex",
+		"openai",
+		"font",
+		"persian",
+		"arabic",
+		"farsi",
+		"windows",
+		"rtl",
+		"ui",
+		"webview",
+		"chatgpt",
+		"readability",
+		"vazir",
+		"vazirmatn",
+		"ai-studio",
+		"providers"
+	],
+	"activationEvents": [
+		"onStartupFinished"
+	],
+	"main": "./extension.js",
+	"extensionKind": [
+		"workspace"
+	],
+	"extensionDependencies": [
+		"openai.chatgpt"
+	],
+	"pricing": "Free",
+	"qna": false,
+	"markdown": "github",
+	"codexNexusMeta": {
+		"testedCodexVersion": "26.715.31925",
+		"testedOn": "2026-07-19"
+	},
+	"contributes": {
+		"commands": [
+			{
+				"command": "codexNexus.applyPatch",
+				"title": "Codex Nexus: Apply Persian/Arabic RTL Patch"
+			},
+			{
+				"command": "codexNexus.checkCompatibility",
+				"title": "Codex Nexus: Check Compatibility"
+			},
+			{
+				"command": "codexNexus.restorePatch",
+				"title": "Codex Nexus: Restore Original Files"
+			},
+			{
+				"command": "codexNexus.fullCleanup",
+				"title": "Codex Nexus: Full Cleanup and Reset Managed Settings"
+			},
+			{
+				"command": "codexNexus.auditEnvironment",
+				"title": "Codex Nexus: Audit Environment and Legacy Hooks"
+			},
+			{
+				"command": "codexNexus.removeLegacyStartupHooks",
+				"title": "Codex Nexus: Remove Legacy Startup Hooks"
+			},
+			{
+				"command": "codexNexus.cleanOrphanArtifacts",
+				"title": "Codex Nexus: Clean Orphan Patch Artifacts"
+			},
+			{
+				"command": "codexNexus.setLocalePersian",
+				"title": "Codex Nexus: Set Codex Language to Persian"
+			},
+			{
+				"command": "codexNexus.setLocaleArabic",
+				"title": "Codex Nexus: Set Codex Language to Arabic"
+			},
+			{
+				"command": "codexNexus.setLocaleEnglish",
+				"title": "Codex Nexus: Set Codex Language to English"
+			},
+			{
+				"command": "codexNexus.showStatusMenu",
+				"title": "Codex Nexus: Show Status Menu"
+			},
+			{
+				"command": "codexNexus.openMarketplace",
+				"title": "Codex Nexus: Open Marketplace Page"
+			},
+			{
+				"command": "codexNexus.refreshDashboard",
+				"title": "Codex Nexus: Refresh Dashboard",
+				"icon": "$(refresh)"
+			},
+			{
+				"command": "codexNexus.showLogs",
+				"title": "Codex Nexus: Open Logs"
+			}
+		],
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "codexNexus",
+					"title": "Codex Nexus",
+					"icon": "assets/sidebar-icon.svg"
+				}
+			]
+		},
+		"views": {
+			"codexNexus": [
+				{
+					"id": "codexNexus.dashboard",
+					"name": "Dashboard",
+					"type": "webview"
+				}
+			]
+		},
+		"menus": {
+			"view/title": [
+				{
+					"command": "codexNexus.refreshDashboard",
+					"when": "view == codexNexus.dashboard",
+					"group": "navigation"
+				}
+			]
+		},
+		"configuration": {
+			"title": "Codex Nexus",
+			"properties": {
+				"codexNexus.enabled": {
+					"type": "boolean",
+					"default": true,
+					"description": "Enable Persian font and RTL support."
+				},
+				"codexNexus.patchOnStartup": {
+					"type": "boolean",
+					"default": true,
+					"description": "Apply changes automatically on startup."
+				},
+				"codexNexus.showReloadPrompt": {
+					"type": "boolean",
+					"default": true,
+					"description": "Show a reload prompt after changes."
+				},
+				"codexNexus.autoSetCodexLanguage": {
+					"type": "boolean",
+					"default": true,
+					"description": "Set Codex language to Persian automatically."
+				},
+				"codexNexus.dashboardLanguage": {
+					"type": "string",
+					"enum": ["fa", "ar", "en"],
+					"default": "en",
+					"description": "Language of the Codex Nexus dashboard interface."
+				},
+				"codexNexus.preferredCodexLocale": {
+					"type": "string",
+					"default": "fa",
+					"description": "Preferred locale code."
+				},
+				"codexNexus.preferredFontFamily": {
+					"type": "string",
+					"default": "Vazirmatn",
+					"description": "Preferred UI font family."
+				},
+				"codexNexus.fontSize": {
+					"type": "number",
+					"default": 0,
+					"minimum": 0,
+					"maximum": 24,
+					"description": "Persian conversation and composer font size in pixels. Set to 0 to use the Codex default. Values from 10 to 24 are supported."
+				},
+				"codexNexus.showLegacyStartupWarning": {
+					"type": "boolean",
+					"default": true,
+					"description": "Warn when old external Windows Startup scripts are detected."
+				},
+				"codexNexus.localeManaged": {
+					"type": "boolean",
+					"default": false,
+					"scope": "application",
+					"description": "Internal marker indicating that this extension manages the Codex locale."
+				},
+				"codexNexus.patchAiChat": {
+					"type": "boolean",
+					"default": true,
+					"description": "Apply Persian font and RTL support to VS Code AI Chat / Copilot Chat."
+				}
+			}
+		}
+	},
+	"scripts": {
+		"patch:local": "node ./patch-cli.js",
+		"package:vsix": "npx @vscode/vsce package",
+		"test": "node --test tests/*.test.js",
+		"test:browser": "node ./scripts/browser-direction-smoke.js",
+		"vscode:uninstall": "node ./uninstall.js",
+		"patch:workbench": "node ./scripts/patch-workbench.js"
+	},
+	"private": true
+}
