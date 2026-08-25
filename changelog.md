@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.4
+
+- Fixes extension activation and dashboard loading by removing nested template literals from the generated webview script.
+- Restores registration of dashboard commands, including `codexNexus.refreshDashboard`.
+
 ## 1.0.3
 
 - Custom providers now obtain their bearer token through a Codex `auth.command` that reads the provider-scoped secret from `~/.codex/auth.json`; no exported `env_key` is required.

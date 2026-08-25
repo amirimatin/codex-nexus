@@ -82,9 +82,14 @@ test("dashboard no longer renders the legacy product name and contains modern UI
   assert.match(dashboard, /id=\"btn-close-provider-mgr\"/);
   assert.match(dashboard, /id=\"model-dropdown-menu\"/);
   assert.match(dashboard, /id=\"combobox-options-list\"/);
+  assert.doesNotMatch(
+    dashboard,
+    /return `<!--[\s\S]*?\$\{esc\(/,
+    "The webview source must not contain nested template literals; they break extension activation.",
+  );
   assert.equal(manifest.name, "codex-nexus");
   assert.equal(manifest.publisher, "amirimatin");
-  assert.equal(manifest.version, "1.0.3");
+  assert.equal(manifest.version, "1.0.4");
   assert.equal(manifest.contributes.viewsContainers.activitybar[0].title, "Codex Nexus");
   assert.equal(
     manifest.contributes.views.codexNexus[0].name,

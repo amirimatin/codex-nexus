@@ -1602,8 +1602,13 @@ class DashboardProvider {
 
     const openAiHeader = document.createElement("div");
     openAiHeader.className = "provider-item-header";
-    const openAiActiveBadge = isOpenAiActive ? `<span class="provider-badge" style="font-size:10px;">✓ ${esc(dict.activeBadge || "فعال")}</span>` : "";
-    openAiHeader.innerHTML = `<strong style="font-size:11.5px;">${esc(dict.providerOpenAiTitle || "OpenAI (پیش‌فرض سیستم)")}</strong>${openAiActiveBadge}`;
+    const openAiActiveBadge = isOpenAiActive
+      ? '<span class="provider-badge" style="font-size:10px;">✓ ' + esc(dict.activeBadge || "فعال") + "</span>"
+      : "";
+    openAiHeader.innerHTML = '<strong style="font-size:11.5px;">'
+      + esc(dict.providerOpenAiTitle || "OpenAI (پیش‌فرض سیستم)")
+      + "</strong>"
+      + openAiActiveBadge;
 
     const openAiMeta = document.createElement("div");
     openAiMeta.className = "provider-item-meta";
@@ -1643,18 +1648,29 @@ class DashboardProvider {
       item.className = "provider-item" + (isActive ? " active" : "");
 
       const keyInfo = p.apiKey
-        ? `<span class="provider-badge" style="background:rgba(120,80,220,0.15);color:var(--md-sys-color-primary);font-size:9.5px;padding:1px 5px;border-radius:4px;">🔑 ${esc(dict.providerKeyBadge || "دارای کلید")}</span>`
-        : `<span style="color:var(--md-sys-color-on-surface-variant);font-size:9.5px;">${esc(dict.providerNoKeyBadge || "بدون کلید")}</span>`;
+        ? '<span class="provider-badge" style="background:rgba(120,80,220,0.15);color:var(--md-sys-color-primary);font-size:9.5px;padding:1px 5px;border-radius:4px;">🔑 '
+          + esc(dict.providerKeyBadge || "دارای کلید") + "</span>"
+        : '<span style="color:var(--md-sys-color-on-surface-variant);font-size:9.5px;">'
+          + esc(dict.providerNoKeyBadge || "بدون کلید") + "</span>";
 
-      const activeBadge = isActive ? `<span class="provider-badge" style="font-size:10px;">✓ ${esc(dict.activeBadge || "فعال")}</span>` : "";
+      const activeBadge = isActive
+        ? '<span class="provider-badge" style="font-size:10px;">✓ ' + esc(dict.activeBadge || "فعال") + "</span>"
+        : "";
 
       const header = document.createElement("div");
       header.className = "provider-item-header";
-      header.innerHTML = `<div style="display:flex;align-items:center;gap:6px;"><strong style="font-size:11.5px;">${esc(p.name || p.id)}</strong>${keyInfo}</div>${activeBadge}`;
+      header.innerHTML = '<div style="display:flex;align-items:center;gap:6px;"><strong style="font-size:11.5px;">'
+        + esc(p.name || p.id)
+        + "</strong>"
+        + keyInfo
+        + "</div>"
+        + activeBadge;
 
       const meta = document.createElement("div");
       meta.className = "provider-item-meta";
-      meta.textContent = `ID: ${p.id} | Base: ${p.baseUrl || "no url"} | Auth: ${p.authMode === "authJson" ? "auth.json" : (p.envKey || "environment")}`;
+      meta.textContent = "ID: " + p.id
+        + " | Base: " + (p.baseUrl || "no url")
+        + " | Auth: " + (p.authMode === "authJson" ? "auth.json" : (p.envKey || "environment"));
 
       const actions = document.createElement("div");
       actions.className = "provider-item-actions";
