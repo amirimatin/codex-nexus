@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.3
+
+- Custom providers now obtain their bearer token through a Codex `auth.command` that reads the provider-scoped secret from `~/.codex/auth.json`; no exported `env_key` is required.
+- Migrates usable legacy provider credentials into `auth.json` and removes the environment-variable dependency from the managed provider definition.
+- Updates the provider dashboard so API keys are not prefilled on edit and authentication status clearly identifies `auth.json` storage.
+
 ## 1.0.2
 
 - Redesigned provider API key management with secure token persistence in `~/.codex/auth.json` (locked with `0600` filesystem permissions) and automatic healing of legacy raw `env_key` entries to eliminate `Missing environment variable` crashes.

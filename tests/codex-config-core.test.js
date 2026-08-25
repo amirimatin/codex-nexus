@@ -92,6 +92,7 @@ test("codex config reads active provider details and all providers", () => {
     name: "9Router",
     baseUrl: "https://router.example.com/v1",
     envKey: "EXAMPLE_AI_TOKEN",
+    authMode: "environment",
     apiKey: "",
     wireApi: "responses",
   });
@@ -148,12 +149,13 @@ test("codex custom provider CRUD works correctly", () => {
   const authEdited = JSON.parse(fs.readFileSync(authPath, "utf8"));
   assert.equal(authEdited.tokens["custom-2"], "sk-provider-two-new-key");
 
-  // Switch active provider to custom-2 -> auth.OPENAI_API_KEY should become custom-2's key
+  // Switching only changes config.toml. Provider credentials stay scoped to tokens.<id>.
   const switched = setActiveModelProvider("custom-2", file);
   assert.equal(switched.modelProvider, "custom-2");
   assert.equal(switched.provider.name, "Provider Two Edited");
   const authSwitched = JSON.parse(fs.readFileSync(authPath, "utf8"));
-  assert.equal(authSwitched.OPENAI_API_KEY, "sk-provider-two-new-key");
+  assert.equal(authSwitched.OPENAI_API_KEY, undefined);
+  assert.equal(authSwitched.tokens["custom-2"], "sk-provider-two-new-key");
   assert.equal(authSwitched.auth_mode, "apikey");
 
   // Switch back to default OpenAI
@@ -175,10 +177,10 @@ test("codex custom provider CRUD works correctly", () => {
   assert.equal(deletedFinal.modelProvider, null);
   const authFinal = JSON.parse(fs.readFileSync(authPath, "utf8"));
   assert.equal(authFinal.tokens["custom-1"], undefined);
-  assert.equal(authFinal.OPENAI_API_KEY, undefined); // completely clean, no leftover secret!
+  assert.equal(authFinal.OPENAI_API_KEY, undefined); // no global token was created
 });
 
-test("codex config automatically sanitizes and heals raw API keys in env_key", () => {
+test("codex config migrates raw env_key secrets to an auth.json command", () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "codex-config-"));
   const file = path.join(dir, "config.toml");
   fs.writeFileSync(file, [
@@ -195,19 +197,22 @@ test("codex config automatically sanitizes and heals raw API keys in env_key", (
   // Reading config triggers auto-migration
   const config = readCodexModelConfig(file);
   assert.equal(config.provider.id, "omni");
-  assert.equal(config.provider.envKey, "OPENAI_API_KEY"); // healed to valid identifier!
+  assert.equal(config.provider.envKey, null);
+  assert.equal(config.provider.authMode, "authJson");
   assert.equal(config.provider.apiKey, "sk-56e69d80af06c02f-ce645b-e41d1700"); // extracted to auth.json!
 
   // Check config.toml file was updated
   const rawToml = fs.readFileSync(file, "utf8");
-  assert.match(rawToml, /env_key = "OPENAI_API_KEY"/);
+  assert.match(rawToml, /\[model_providers\.omni\.auth\]/);
+  assert.match(rawToml, /command = "node"/);
   assert.doesNotMatch(rawToml, /env_key = "sk-/);
+  assert.doesNotMatch(rawToml, /^env_key\s*=/m);
 
   // Check auth.json received the token
   const authPath = path.join(dir, "auth.json");
   const auth = JSON.parse(fs.readFileSync(authPath, "utf8"));
   assert.equal(auth.tokens["omni"], "sk-56e69d80af06c02f-ce645b-e41d1700");
-  assert.equal(auth.OPENAI_API_KEY, "sk-56e69d80af06c02f-ce645b-e41d1700");
+  assert.equal(auth.OPENAI_API_KEY, undefined);
 });
 
 test("provider model list normalizes OpenAI-compatible responses", async () => {

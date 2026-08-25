@@ -6,7 +6,7 @@
 
 ### Next-Generation AI Studio, Multi-Provider Orchestration & Bidirectional Typography for VS Code
 
-[![Version](https://img.shields.io/badge/version-1.0.2-blue.svg)](package.json)
+[![Version](https://img.shields.io/badge/version-1.0.3-blue.svg)](package.json)
 [![Visual Studio Marketplace](https://img.shields.io/badge/VS%20Marketplace-amirimatin.codex--nexus-blueviolet.svg)](https://marketplace.visualstudio.com/items?itemName=amirimatin.codex-nexus)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE.md)
 [![VS Code](https://img.shields.io/badge/VS%20Code-1.96.0+-purple.svg)](package.json)

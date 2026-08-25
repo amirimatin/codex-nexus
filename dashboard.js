@@ -927,8 +927,8 @@ class DashboardProvider {
         <input type="text" class="input-field" id="provider-input-id" placeholder="Provider ID (e.g. omni)" required />
         <input type="text" class="input-field" id="provider-input-name" placeholder="Display Name (e.g. Omni Route)" />
         <input type="url" class="input-field" id="provider-input-url" placeholder="https://api.example.com/v1" required />
-        <input type="password" class="input-field" id="provider-input-key" placeholder="API Key / Bearer Token (optional)" autocomplete="off" />
-        <input type="text" class="input-field" id="provider-input-env" placeholder="Environment variable name (default: OPENAI_API_KEY)" />
+        <input type="password" class="input-field" id="provider-input-key" placeholder="API Key / Bearer Token (stored in auth.json)" autocomplete="new-password" />
+        <div class="setting-desc" id="txt-provider-auth-note">The key is stored in ~/.codex/auth.json and supplied to Codex without an exported environment variable.</div>
         <div style="display:flex; gap:6px; margin-top:4px;">
           <button type="submit" class="btn btn-sm btn-primary" id="btn-save-provider" style="flex:1;">Save & Activate</button>
           <button type="button" class="btn btn-sm" id="btn-cancel-provider">Cancel</button>
@@ -1146,8 +1146,8 @@ class DashboardProvider {
       providerIdPlaceholder: "شناسه (مثال: omni)",
       providerNamePlaceholder: "نام نمایشی (مثال: Omni Route)",
       providerUrlPlaceholder: "https://api.example.com/v1",
-      providerApiKeyPlaceholder: "کلید دسترسی / API Key (اختیاری)",
-      providerEnvPlaceholder: "نام متغیر محیطی (پیش‌فرض: OPENAI_API_KEY)",
+      providerApiKeyPlaceholder: "کلید دسترسی / API Key (در auth.json ذخیره می‌شود)",
+      providerAuthNote: "کلید در ~/.codex/auth.json نگهداری می‌شود و بدون export شدن متغیر محیطی به Codex داده می‌شود.",
       providerFormNewTitle: "افزودن پروایدر جدید",
       providerFormEditTitle: "ویرایش پروایدر",
       providerKeyBadge: "دارای کلید",
@@ -1215,8 +1215,8 @@ class DashboardProvider {
       providerIdPlaceholder: "المعرف (مثال: omni)",
       providerNamePlaceholder: "الاسم المعروض (مثال: Omni Route)",
       providerUrlPlaceholder: "https://api.example.com/v1",
-      providerApiKeyPlaceholder: "مفتاح الوصول / API Key (اختياري)",
-      providerEnvPlaceholder: "اسم متغير البيئة (افتراضي: OPENAI_API_KEY)",
+      providerApiKeyPlaceholder: "مفتاح الوصول / API Key (يُخزن في auth.json)",
+      providerAuthNote: "يُحفظ المفتاح في ~/.codex/auth.json ويُمرر إلى Codex دون تصدير متغير بيئة.",
       providerFormNewTitle: "إضافة مزود جديد",
       providerFormEditTitle: "تعديل المزود",
       providerKeyBadge: "مفتاح مضبوط",
@@ -1284,8 +1284,8 @@ class DashboardProvider {
       providerIdPlaceholder: "Provider ID (e.g. omni)",
       providerNamePlaceholder: "Display Name (e.g. Omni Route)",
       providerUrlPlaceholder: "https://api.example.com/v1",
-      providerApiKeyPlaceholder: "API Key / Bearer Token (optional)",
-      providerEnvPlaceholder: "Environment variable name (default: OPENAI_API_KEY)",
+      providerApiKeyPlaceholder: "API Key / Bearer Token (stored in auth.json)",
+      providerAuthNote: "The key is stored in ~/.codex/auth.json and supplied to Codex without an exported environment variable.",
       providerFormNewTitle: "Add New Provider",
       providerFormEditTitle: "Edit Provider",
       providerKeyBadge: "Key Set",
@@ -1359,7 +1359,7 @@ class DashboardProvider {
     document.getElementById("provider-input-name").placeholder = dict.providerNamePlaceholder;
     document.getElementById("provider-input-url").placeholder = dict.providerUrlPlaceholder;
     document.getElementById("provider-input-key").placeholder = dict.providerApiKeyPlaceholder;
-    document.getElementById("provider-input-env").placeholder = dict.providerEnvPlaceholder;
+    document.getElementById("txt-provider-auth-note").textContent = dict.providerAuthNote;
     document.getElementById("font-custom-input").placeholder = dict.fontCustomPlaceholder;
 
     document.getElementById("btn-refresh-models").title = dict.refreshModels;
@@ -1654,7 +1654,7 @@ class DashboardProvider {
 
       const meta = document.createElement("div");
       meta.className = "provider-item-meta";
-      meta.textContent = `ID: ${p.id} | Base: ${p.baseUrl || "no url"} | Env: ${p.envKey || "OPENAI_API_KEY"}`;
+      meta.textContent = `ID: ${p.id} | Base: ${p.baseUrl || "no url"} | Auth: ${p.authMode === "authJson" ? "auth.json" : (p.envKey || "environment")}`;
 
       const actions = document.createElement("div");
       actions.className = "provider-item-actions";
@@ -1675,8 +1675,7 @@ class DashboardProvider {
         idInput.style.cursor = "not-allowed";
         document.getElementById("provider-input-name").value = p.name || "";
         document.getElementById("provider-input-url").value = p.baseUrl || "";
-        document.getElementById("provider-input-key").value = p.apiKey || "";
-        document.getElementById("provider-input-env").value = p.envKey || "OPENAI_API_KEY";
+        document.getElementById("provider-input-key").value = "";
         document.getElementById("btn-save-provider").textContent = dict.saveChanges || "ذخیره تغییرات";
         form.classList.remove("hidden");
         form.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -1926,13 +1925,11 @@ class DashboardProvider {
     const name = document.getElementById("provider-input-name").value.trim();
     const baseUrl = document.getElementById("provider-input-url").value.trim();
     const apiKey = document.getElementById("provider-input-key").value.trim();
-    const envKey = document.getElementById("provider-input-env").value.trim();
-
     if (!id || !baseUrl) return;
     vscode.postMessage({
       type: "saveCustomProvider",
       providerId: id,
-      data: { name: name || id, baseUrl, apiKey, envKey: envKey || "OPENAI_API_KEY", activate: true }
+      data: { name: name || id, baseUrl, apiKey, activate: true }
     });
     e.target.reset();
     document.getElementById("form-provider-edit").classList.add("hidden");

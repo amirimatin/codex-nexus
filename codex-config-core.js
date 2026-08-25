@@ -5,6 +5,7 @@ const os = require("os");
 const path = require("path");
 
 const MODEL_RE = /^[A-Za-z0-9][A-Za-z0-9._:/+-]{0,159}$/;
+const AUTH_JSON_COMMAND = "node";
 
 function defaultCodexConfigPath(env = process.env) {
   const home = env.CODEX_HOME && path.isAbsolute(env.CODEX_HOME)
@@ -56,7 +57,7 @@ function writeAuthJson(data, authPath = defaultCodexAuthPath()) {
   }
 }
 
-function saveProviderToken(providerId, apiKey, envKey = "OPENAI_API_KEY", authPath = defaultCodexAuthPath(), isActive = false) {
+function saveProviderToken(providerId, apiKey, authPath = defaultCodexAuthPath()) {
   if (!providerId || typeof providerId !== "string") return;
   const id = providerId.trim();
   const key = typeof apiKey === "string" ? apiKey.trim() : "";
@@ -66,14 +67,6 @@ function saveProviderToken(providerId, apiKey, envKey = "OPENAI_API_KEY", authPa
   auth.auth_mode = "apikey";
   auth.tokens = auth.tokens || {};
   auth.tokens[id] = key;
-
-  if (envKey && isValidEnvVarName(envKey)) {
-    auth[envKey] = key;
-  }
-
-  if (isActive || id === "openai" || id === "default") {
-    auth.OPENAI_API_KEY = key;
-  }
 
   writeAuthJson(auth, authPath);
 }
@@ -93,36 +86,39 @@ function sanitizeAndMigrateProviders(filePath = defaultCodexConfigPath()) {
       providerIds.push(match[1]);
     }
 
-    const activeId = readTopLevelString(raw, "model_provider");
-
     for (const id of providerIds) {
       const section = readSection(raw, `model_providers.${id}`);
       if (!section) continue;
       const currentEnvKey = readStringInBlock(section, "env_key");
-      if (currentEnvKey && !isValidEnvVarName(currentEnvKey)) {
-        // currentEnvKey is a raw API key (like sk-...)!
+      const hasAuthCommand = Boolean(readStringInBlock(readProviderAuthSection(raw, id) || "", "command"));
+      const legacyRawToken = currentEnvKey && !isValidEnvVarName(currentEnvKey) ? currentEnvKey : "";
+      const storedToken = auth?.tokens?.[id]
+        || (currentEnvKey && auth?.[currentEnvKey])
+        || (!currentEnvKey && auth?.OPENAI_API_KEY)
+        || "";
+      const shouldMigrate = Boolean(legacyRawToken || (!hasAuthCommand && storedToken));
+      if (shouldMigrate) {
+        // Move legacy environment-based credentials into auth.json when they are
+        // already available. From then on Codex reads them through auth.command.
+        const token = legacyRawToken || storedToken;
+        if (token) {
         auth.auth_mode = "apikey";
         auth.tokens = auth.tokens || {};
-        auth.tokens[id] = currentEnvKey;
-        if (activeId === id || !auth.OPENAI_API_KEY) {
-          auth.OPENAI_API_KEY = currentEnvKey;
+          auth.tokens[id] = token;
+          authChanged = true;
         }
-        authChanged = true;
 
-        // Fix config.toml section env_key to OPENAI_API_KEY
+        // env_key is deliberately removed: Codex resolves it from process.env,
+        // whereas auth.command can retrieve the secret from auth.json.
         const name = readStringInBlock(section, "name") || id;
         const baseUrl = readStringInBlock(section, "base_url") || "";
         const wireApi = readStringInBlock(section, "wire_api") || readStringInBlock(section, "wire_format") || "responses";
-        const sectionName = `model_providers.${id}`;
-        const newSectionContent = [
-          `[${sectionName}]`,
-          `name = "${escapeTomlBasicString(name)}"`,
-          `base_url = "${escapeTomlBasicString(baseUrl)}"`,
-          `env_key = "OPENAI_API_KEY"`,
-          `wire_api = "${escapeTomlBasicString(wireApi)}"`,
-          ""
-        ].join("\n");
-        raw = replaceOrAppendSection(raw, sectionName, newSectionContent);
+        raw = replaceProviderDefinition(raw, id, buildProviderDefinition({
+          id,
+          name,
+          baseUrl,
+          wireApi
+        }));
         changed = true;
       }
     }
@@ -153,13 +149,14 @@ function readAllModelProviders(filePath = defaultCodexConfigPath()) {
       const id = match[1];
       const section = readSection(raw, `model_providers.${id}`);
       if (section) {
-        const envKey = readStringInBlock(section, "env_key") || "OPENAI_API_KEY";
-        const apiKey = auth?.tokens?.[id] || (envKey && auth?.[envKey] ? auth[envKey] : "") || "";
+        const envKey = readStringInBlock(section, "env_key");
+        const apiKey = auth?.tokens?.[id] || (envKey && auth?.[envKey] ? auth[envKey] : "") || auth?.OPENAI_API_KEY || "";
         providers.push({
           id,
           name: readStringInBlock(section, "name") || id,
           baseUrl: readStringInBlock(section, "base_url") || "",
           envKey,
+          authMode: envKey ? "environment" : "authJson",
           apiKey,
           wireApi: readStringInBlock(section, "wire_api") || readStringInBlock(section, "wire_format") || "responses"
         });
@@ -220,22 +217,6 @@ function setActiveModelProvider(providerId, filePath = defaultCodexConfigPath())
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, updated, "utf8");
 
-  // Sync auth.json for newly active provider
-  const authPath = path.join(path.dirname(filePath), "auth.json");
-  const auth = readAuthJson(authPath);
-  const targetId = isDefaultOpenAi ? "openai" : id;
-  const provider = !isDefaultOpenAi ? readModelProvider(updated, id, filePath) : null;
-  const token = auth?.tokens?.[targetId] || (provider?.envKey && auth?.[provider.envKey]) || (isDefaultOpenAi ? auth?.tokens?.default : "");
-
-  if (token) {
-    auth.OPENAI_API_KEY = token;
-    auth.auth_mode = "apikey";
-    if (provider?.envKey && isValidEnvVarName(provider.envKey)) {
-      auth[provider.envKey] = token;
-    }
-    writeAuthJson(auth, authPath);
-  }
-
   return readCodexModelConfig(filePath);
 }
 
@@ -262,6 +243,77 @@ function removeSectionFromRaw(raw, sectionName) {
   return (raw.slice(0, start) + raw.slice(end)).replace(/\n{3,}/g, "\n\n").trimEnd() + "\n";
 }
 
+function replaceProviderDefinition(raw, providerId, definition) {
+  const baseSection = `model_providers.${providerId}`;
+  const header = new RegExp(`^\\s*\\[${escapeRegExp(baseSection)}\\]\\s*(?:#.*)?$`, "m");
+  const match = raw.match(header);
+  if (!match) {
+    const separator = raw.length === 0 || raw.endsWith("\n\n") ? "" : raw.endsWith("\n") ? "\n" : "\n\n";
+    return `${raw}${separator}${definition.trim()}\n`;
+  }
+  const start = match.index;
+  const nextTable = /^\s*\[([^\]]+)\]\s*(?:#.*)?$/gm;
+  nextTable.lastIndex = start + match[0].length;
+  let next;
+  let end = raw.length;
+  while ((next = nextTable.exec(raw)) !== null) {
+    const sectionName = next[1];
+    if (next.index > start && sectionName !== baseSection && !sectionName.startsWith(`${baseSection}.`)) {
+      end = next.index;
+      break;
+    }
+  }
+  return `${raw.slice(0, start)}${definition.trim()}\n${raw.slice(end)}`.replace(/\n{3,}/g, "\n\n").trimEnd() + "\n";
+}
+
+function removeProviderDefinition(raw, providerId) {
+  const baseSection = `model_providers.${providerId}`;
+  const header = new RegExp(`^\\s*\\[${escapeRegExp(baseSection)}\\]\\s*(?:#.*)?$`, "m");
+  const match = raw.match(header);
+  if (!match) return raw;
+  const start = match.index;
+  const nextTable = /^\s*\[([^\]]+)\]\s*(?:#.*)?$/gm;
+  nextTable.lastIndex = start + match[0].length;
+  let next;
+  let end = raw.length;
+  while ((next = nextTable.exec(raw)) !== null) {
+    const sectionName = next[1];
+    if (next.index > start && sectionName !== baseSection && !sectionName.startsWith(`${baseSection}.`)) {
+      end = next.index;
+      break;
+    }
+  }
+  return (raw.slice(0, start) + raw.slice(end)).replace(/\n{3,}/g, "\n\n").trimEnd() + "\n";
+}
+
+function buildProviderDefinition({ id, name, baseUrl, wireApi }) {
+  const args = buildAuthJsonCommandArgs(id);
+  return [
+    `[model_providers.${id}]`,
+    `name = "${escapeTomlBasicString(name)}"`,
+    `base_url = "${escapeTomlBasicString(baseUrl)}"`,
+    `wire_api = "${escapeTomlBasicString(wireApi)}"`,
+    "",
+    `[model_providers.${id}.auth]`,
+    `command = "${AUTH_JSON_COMMAND}"`,
+    `args = [${args.map(value => `"${escapeTomlBasicString(value)}"`).join(", ")}]`,
+    "timeout_ms = 5000",
+    "refresh_interval_ms = 300000",
+    ""
+  ].join("\n");
+}
+
+function buildAuthJsonCommandArgs(providerId) {
+  const script = [
+    "const fs=require('fs');const os=require('os');const path=require('path');",
+    "const home=process.env.CODEX_HOME&&path.isAbsolute(process.env.CODEX_HOME)?process.env.CODEX_HOME:path.join(os.homedir(),'.codex');",
+    "const auth=JSON.parse(fs.readFileSync(path.join(home,'auth.json'),'utf8'));",
+    "const token=(auth.tokens&&auth.tokens[process.argv[1]])||auth.OPENAI_API_KEY;",
+    "if(typeof token!=='string'||!token.trim())process.exit(1);process.stdout.write(token.trim());"
+  ].join("");
+  return ["-e", script, providerId];
+}
+
 function upsertModelProvider(providerId, data = {}, filePath = defaultCodexConfigPath()) {
   if (!providerId || typeof providerId !== "string" || !/^[A-Za-z0-9_-]+$/.test(providerId.trim())) {
     throw new TypeError("Provider ID must contain only alphanumeric characters, underscores, and dashes.");
@@ -269,15 +321,7 @@ function upsertModelProvider(providerId, data = {}, filePath = defaultCodexConfi
   const id = providerId.trim();
   const name = typeof data.name === "string" && data.name.trim() ? data.name.trim() : id;
   const baseUrl = typeof data.baseUrl === "string" ? data.baseUrl.trim() : "";
-  const rawEnvKey = typeof data.envKey === "string" ? data.envKey.trim() : "";
   let apiKey = typeof data.apiKey === "string" ? data.apiKey.trim() : "";
-
-  // If user entered raw key into envKey field, treat as apiKey
-  if (!apiKey && rawEnvKey && (rawEnvKey.startsWith("sk-") || !isValidEnvVarName(rawEnvKey))) {
-    apiKey = rawEnvKey;
-  }
-
-  const envKey = isValidEnvVarName(rawEnvKey) ? rawEnvKey : "OPENAI_API_KEY";
   const wireApi = typeof data.wireApi === "string" && data.wireApi.trim() ? data.wireApi.trim() : "responses";
 
   let raw = "";
@@ -287,28 +331,17 @@ function upsertModelProvider(providerId, data = {}, filePath = defaultCodexConfi
     if (!error || error.code !== "ENOENT") throw error;
   }
 
-  const sectionName = `model_providers.${id}`;
-  const sectionContent = [
-    `[${sectionName}]`,
-    `name = "${escapeTomlBasicString(name)}"`,
-    `base_url = "${escapeTomlBasicString(baseUrl)}"`,
-    `env_key = "${escapeTomlBasicString(envKey)}"`,
-    `wire_api = "${escapeTomlBasicString(wireApi)}"`,
-    ""
-  ].join("\n");
-
-  const updated = replaceOrAppendSection(raw, sectionName, sectionContent);
+  const updated = replaceProviderDefinition(raw, id, buildProviderDefinition({
+    id, name, baseUrl, wireApi
+  }));
 
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, updated, "utf8");
 
   // Save token in auth.json if provided
   const authPath = path.join(path.dirname(filePath), "auth.json");
-  const activeId = readTopLevelString(updated, "model_provider");
-  const isActive = data.activate === true || activeId === id;
-
   if (apiKey) {
-    saveProviderToken(id, apiKey, envKey, authPath, isActive);
+    saveProviderToken(id, apiKey, authPath);
   }
 
   if (data.activate === true) {
@@ -331,8 +364,7 @@ function deleteModelProvider(providerId, filePath = defaultCodexConfigPath()) {
 
   const sectionName = `model_providers.${id}`;
   const section = readSection(raw, sectionName);
-  const customEnvKey = section ? readStringInBlock(section, "env_key") : null;
-  let updated = removeSectionFromRaw(raw, sectionName);
+  let updated = removeProviderDefinition(raw, id);
 
   // Clean from auth.json
   const authPath = path.join(path.dirname(filePath), "auth.json");
@@ -343,11 +375,6 @@ function deleteModelProvider(providerId, filePath = defaultCodexConfigPath()) {
     delete auth.tokens[id];
     authChanged = true;
   }
-  if (customEnvKey && customEnvKey !== "OPENAI_API_KEY" && auth?.[customEnvKey]) {
-    delete auth[customEnvKey];
-    authChanged = true;
-  }
-
   const activeId = readTopLevelString(raw, "model_provider");
   if (activeId === id) {
     const existing = readAllModelProviders(filePath);
@@ -360,12 +387,6 @@ function deleteModelProvider(providerId, filePath = defaultCodexConfigPath()) {
       return setActiveModelProvider(nextProviderId, filePath);
     }
     // No remaining custom providers -> fallback to OpenAI default
-    if (auth?.tokens?.openai) {
-      auth.OPENAI_API_KEY = auth.tokens.openai;
-    } else {
-      delete auth.OPENAI_API_KEY;
-    }
-    authChanged = true;
     if (authChanged) writeAuthJson(auth, authPath);
     updated = updated.replace(/^\s*model_provider\s*=.*$/m, "").trimEnd() + "\n";
     fs.writeFileSync(filePath, updated, "utf8");
@@ -401,18 +422,23 @@ function readTopLevelString(raw, key) {
 function readModelProvider(raw, providerName, filePath = defaultCodexConfigPath()) {
   const section = readSection(raw, `model_providers.${providerName}`);
   if (!section) return null;
-  const envKey = readStringInBlock(section, "env_key") || "OPENAI_API_KEY";
+  const envKey = readStringInBlock(section, "env_key");
   const authPath = path.join(path.dirname(filePath), "auth.json");
   const auth = readAuthJson(authPath);
-  const apiKey = auth?.tokens?.[providerName] || (envKey && auth?.[envKey] ? auth[envKey] : "") || "";
+  const apiKey = auth?.tokens?.[providerName] || (envKey && auth?.[envKey] ? auth[envKey] : "") || auth?.OPENAI_API_KEY || "";
   return {
     id: providerName,
     name: readStringInBlock(section, "name") || providerName,
     baseUrl: readStringInBlock(section, "base_url") || "",
     envKey,
+    authMode: envKey ? "environment" : "authJson",
     apiKey,
     wireApi: readStringInBlock(section, "wire_api") || readStringInBlock(section, "wire_format") || "responses"
   };
+}
+
+function readProviderAuthSection(raw, providerName) {
+  return readSection(raw, `model_providers.${providerName}.auth`);
 }
 
 function readSection(raw, sectionName) {
@@ -428,6 +454,7 @@ function readStringInBlock(raw, key) {
   const match = raw.match(new RegExp(`^\\s*${escapeRegExp(key)}\\s*=\\s*"((?:\\\\.|[^"\\\\])*)"\\s*(?:#.*)?$`, "m"));
   return match ? unescapeTomlBasicString(match[1]) : null;
 }
+
 
 function writeTopLevelString(raw, key, value) {
   const line = `${key} = "${escapeTomlBasicString(value)}"`;
