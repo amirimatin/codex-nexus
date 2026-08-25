@@ -1745,7 +1745,11 @@ class DashboardProvider {
     if (filtered.length === 0) {
       const empty = document.createElement("div");
       empty.className = "combobox-empty";
-      empty.textContent = dict.noModelsFound || "هیچ مدلی یافت نشد";
+      const isCurrentlyLoading = (latestState && latestState.codexModel && latestState.codexModel.models && latestState.codexModel.models.status === "loading") ||
+        (document.getElementById("combobox-spinner") && !document.getElementById("combobox-spinner").classList.contains("hidden"));
+      empty.textContent = isCurrentlyLoading
+        ? (dict.modelsLoading || "در حال دریافت مدل‌ها...")
+        : (dict.noModelsFound || "هیچ مدلی یافت نشد");
       list.appendChild(empty);
       return;
     }
@@ -1809,6 +1813,22 @@ class DashboardProvider {
       searchBox.value = "";
       renderComboboxOptions(providerModelsList, "");
       searchBox.focus();
+
+      if (!providerModelsList || providerModelsList.length === 0) {
+        const isAlreadyLoading = latestState && latestState.codexModel && latestState.codexModel.models && latestState.codexModel.models.status === "loading";
+        if (!isAlreadyLoading) {
+          const spinner = document.getElementById("combobox-spinner");
+          const chevron = document.getElementById("combobox-chevron");
+          const statusLabel = document.getElementById("txt-models-status");
+          const resolved = document.documentElement.lang || "fa";
+          const dict = I18N[resolved] || I18N.fa;
+          if (spinner) spinner.classList.remove("hidden");
+          if (chevron) chevron.classList.add("hidden");
+          if (statusLabel) statusLabel.textContent = dict.modelsLoading;
+          renderComboboxOptions([], "");
+          vscode.postMessage({ type: "codexModelsRefresh" });
+        }
+      }
     } else {
       dropdown.classList.add("hidden");
       toggleBtn.setAttribute("aria-expanded", "false");
@@ -1961,7 +1981,7 @@ class DashboardProvider {
   });
 
   modelInput.addEventListener("focus", () => {
-    if (providerModelsList.length > 0) toggleCombobox(true);
+    closeCombobox();
   });
 
   filterInput.addEventListener("input", e => {

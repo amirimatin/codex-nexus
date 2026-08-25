@@ -2,7 +2,7 @@
 	"name": "codex-nexus",
 	"displayName": "Codex Nexus",
 	"description": "Persian and Arabic RTL bidirectional text and typography engine with multi-provider AI model manager for OpenAI Codex in VS Code.",
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"publisher": "amirimatin",
 	"repository": {
 		"type": "git",
@@ -174,7 +174,11 @@
 				},
 				"codexNexus.dashboardLanguage": {
 					"type": "string",
-					"enum": ["fa", "ar", "en"],
+					"enum": [
+						"fa",
+						"ar",
+						"en"
+					],
 					"default": "en",
 					"description": "Language of the Codex Nexus dashboard interface."
 				},

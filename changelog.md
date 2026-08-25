@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.5
+
+- Allows manual model name typing and editing directly in the input field without combobox popup interference or focus hijacking.
+- Adds on-demand model discovery and loading indicator when opening the combobox dropdown if the list is empty, avoiding redundant network requests during dashboard startup.
+
 ## 1.0.4
 
 - Fixes extension activation and dashboard loading by removing nested template literals from the generated webview script.
