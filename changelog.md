@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.6
+
+- Stores provider-specific API keys in `~/.codex/provider-tokens.json`, rather than the Codex-owned `auth.json` file.
+- Activating a provider synchronizes its token to `auth.json` as `OPENAI_API_KEY` and writes `requires_openai_auth = true` in its provider definition.
+- Removes legacy `model_providers.<id>.auth` command blocks and migrates legacy `auth.json.tokens` values into the new provider token store.
+
 ## 1.0.5
 
 - Allows manual model name typing and editing directly in the input field without combobox popup interference or focus hijacking.

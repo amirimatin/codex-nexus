@@ -128,10 +128,10 @@ test("codex custom provider CRUD works correctly", () => {
   assert.equal(updated1.providers[1].name, "Provider Two");
   assert.equal(updated1.providers[1].apiKey, "sk-provider-two-secret-key");
 
-  // Check auth.json has the key stored
-  const authPath = path.join(dir, "auth.json");
-  const auth1 = JSON.parse(fs.readFileSync(authPath, "utf8"));
-  assert.equal(auth1.tokens["custom-2"], "sk-provider-two-secret-key");
+  // Provider credentials are stored outside Codex's auth.json.
+  const tokensPath = path.join(dir, "provider-tokens.json");
+  const tokens1 = JSON.parse(fs.readFileSync(tokensPath, "utf8"));
+  assert.equal(tokens1.tokens["custom-2"], "sk-provider-two-secret-key");
 
   // Edit existing provider custom-2 (update name, baseUrl, apiKey)
   const edited2 = upsertModelProvider("custom-2", {
@@ -146,16 +146,17 @@ test("codex custom provider CRUD works correctly", () => {
   assert.equal(foundEdited.name, "Provider Two Edited");
   assert.equal(foundEdited.baseUrl, "https://p2-new.example.com/v1");
   assert.equal(foundEdited.apiKey, "sk-provider-two-new-key");
-  const authEdited = JSON.parse(fs.readFileSync(authPath, "utf8"));
-  assert.equal(authEdited.tokens["custom-2"], "sk-provider-two-new-key");
+  const tokensEdited = JSON.parse(fs.readFileSync(tokensPath, "utf8"));
+  assert.equal(tokensEdited.tokens["custom-2"], "sk-provider-two-new-key");
 
-  // Switching only changes config.toml. Provider credentials stay scoped to tokens.<id>.
+  // Activating a provider makes its token Codex's active OPENAI_API_KEY.
   const switched = setActiveModelProvider("custom-2", file);
   assert.equal(switched.modelProvider, "custom-2");
   assert.equal(switched.provider.name, "Provider Two Edited");
+  const authPath = path.join(dir, "auth.json");
   const authSwitched = JSON.parse(fs.readFileSync(authPath, "utf8"));
-  assert.equal(authSwitched.OPENAI_API_KEY, undefined);
-  assert.equal(authSwitched.tokens["custom-2"], "sk-provider-two-new-key");
+  assert.equal(authSwitched.OPENAI_API_KEY, "sk-provider-two-new-key");
+  assert.equal(authSwitched.tokens, undefined);
   assert.equal(authSwitched.auth_mode, "apikey");
 
   // Switch back to default OpenAI
@@ -169,18 +170,18 @@ test("codex custom provider CRUD works correctly", () => {
   assert.equal(deleted.providers.length, 1);
   assert.equal(deleted.modelProvider, "custom-1"); // fell back to remaining provider
   const authDeleted = JSON.parse(fs.readFileSync(authPath, "utf8"));
-  assert.equal(authDeleted.tokens["custom-2"], undefined);
+  const tokensDeleted = JSON.parse(fs.readFileSync(tokensPath, "utf8"));
+  assert.equal(tokensDeleted.tokens["custom-2"], undefined);
 
   // Delete last remaining custom provider custom-1
   const deletedFinal = deleteModelProvider("custom-1", file);
   assert.equal(deletedFinal.providers.length, 0);
   assert.equal(deletedFinal.modelProvider, null);
-  const authFinal = JSON.parse(fs.readFileSync(authPath, "utf8"));
-  assert.equal(authFinal.tokens["custom-1"], undefined);
-  assert.equal(authFinal.OPENAI_API_KEY, undefined); // no global token was created
+  const tokensFinal = JSON.parse(fs.readFileSync(tokensPath, "utf8"));
+  assert.equal(tokensFinal.tokens["custom-1"], undefined);
 });
 
-test("codex config migrates raw env_key secrets to an auth.json command", () => {
+test("codex config migrates raw env_key secrets to provider storage and requires_openai_auth", () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "codex-config-"));
   const file = path.join(dir, "config.toml");
   fs.writeFileSync(file, [
@@ -198,21 +199,24 @@ test("codex config migrates raw env_key secrets to an auth.json command", () => 
   const config = readCodexModelConfig(file);
   assert.equal(config.provider.id, "omni");
   assert.equal(config.provider.envKey, null);
-  assert.equal(config.provider.authMode, "authJson");
-  assert.equal(config.provider.apiKey, "sk-56e69d80af06c02f-ce645b-e41d1700"); // extracted to auth.json!
+  assert.equal(config.provider.authMode, "openaiAuth");
+  assert.equal(config.provider.apiKey, "sk-56e69d80af06c02f-ce645b-e41d1700");
 
   // Check config.toml file was updated
   const rawToml = fs.readFileSync(file, "utf8");
-  assert.match(rawToml, /\[model_providers\.omni\.auth\]/);
-  assert.match(rawToml, /command = "node"/);
+  assert.match(rawToml, /requires_openai_auth = true/);
+  assert.doesNotMatch(rawToml, /\[model_providers\.omni\.auth\]/);
+  assert.doesNotMatch(rawToml, /command = "node"/);
   assert.doesNotMatch(rawToml, /env_key = "sk-/);
   assert.doesNotMatch(rawToml, /^env_key\s*=/m);
 
-  // Check auth.json received the token
+  // The provider key is separate; auth.json contains only Codex's active key.
   const authPath = path.join(dir, "auth.json");
   const auth = JSON.parse(fs.readFileSync(authPath, "utf8"));
-  assert.equal(auth.tokens["omni"], "sk-56e69d80af06c02f-ce645b-e41d1700");
-  assert.equal(auth.OPENAI_API_KEY, undefined);
+  assert.equal(auth.tokens, undefined);
+  assert.equal(auth.OPENAI_API_KEY, "sk-56e69d80af06c02f-ce645b-e41d1700");
+  const tokens = JSON.parse(fs.readFileSync(path.join(dir, "provider-tokens.json"), "utf8"));
+  assert.equal(tokens.tokens.omni, "sk-56e69d80af06c02f-ce645b-e41d1700");
 });
 
 test("provider model list normalizes OpenAI-compatible responses", async () => {

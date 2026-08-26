@@ -6,7 +6,7 @@
 
 ### Next-Generation AI Studio, Multi-Provider Orchestration & Bidirectional Typography for VS Code
 
-[![Version](https://img.shields.io/badge/version-1.0.5-blue.svg)](package.json)
+[![Version](https://img.shields.io/badge/version-1.0.6-blue.svg)](package.json)
 [![Visual Studio Marketplace](https://img.shields.io/badge/VS%20Marketplace-amirimatin.codex--nexus-blueviolet.svg)](https://marketplace.visualstudio.com/items?itemName=amirimatin.codex-nexus)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE.md)
 [![VS Code](https://img.shields.io/badge/VS%20Code-1.96.0+-purple.svg)](package.json)
@@ -29,7 +29,7 @@ Whether you are connecting to custom local LLMs (Ollama, vLLM, OpenWebUI, LiteLL
 - **Direct Configuration**: View, add, edit, delete, and switch custom AI providers directly within the dashboard.
 - **Native `~/.codex/config.toml` Integration**: Fully compatible with the official Codex configuration structure.
 - **1-Click Switching**: Instantly toggle between custom providers and the official OpenAI system default.
-- **Flexible Authentication**: Supports both environment variable references (`env_key = "MY_TOKEN"`) and direct API tokens (`sk-...`, `Bearer ...`).
+- **Provider Authentication**: Provider tokens are stored in `~/.codex/provider-tokens.json`; switching a provider writes its token to `~/.codex/auth.json` as `OPENAI_API_KEY`.
 
 ### 🔍 2. Unified Model Combobox
 - **Real-Time Live Search**: Search and filter available models with instant fuzzy matching.
@@ -93,8 +93,8 @@ model_provider = "custom-router"
 [model_providers.custom-router]
 name = "Enterprise AI Gateway"
 base_url = "https://ai.example.com/v1"
-env_key = "MY_AI_API_TOKEN"
 wire_api = "responses"
+requires_openai_auth = true
 ```
 
 You can create, edit, and switch active providers anytime through the **Manage Providers** drawer in the dashboard.

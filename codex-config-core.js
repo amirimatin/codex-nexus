@@ -5,7 +5,7 @@ const os = require("os");
 const path = require("path");
 
 const MODEL_RE = /^[A-Za-z0-9][A-Za-z0-9._:/+-]{0,159}$/;
-const AUTH_JSON_COMMAND = "node";
+const PROVIDER_TOKENS_FILE = "provider-tokens.json";
 
 function defaultCodexConfigPath(env = process.env) {
   const home = env.CODEX_HOME && path.isAbsolute(env.CODEX_HOME)
@@ -30,6 +30,13 @@ function defaultCodexAuthPath(env = process.env) {
     ? env.CODEX_HOME
     : path.join(os.homedir(), ".codex");
   return path.join(home, "auth.json");
+}
+
+function defaultProviderTokensPath(env = process.env) {
+  const home = env.CODEX_HOME && path.isAbsolute(env.CODEX_HOME)
+    ? env.CODEX_HOME
+    : path.join(os.homedir(), ".codex");
+  return path.join(home, PROVIDER_TOKENS_FILE);
 }
 
 function isValidEnvVarName(name) {
@@ -57,17 +64,69 @@ function writeAuthJson(data, authPath = defaultCodexAuthPath()) {
   }
 }
 
-function saveProviderToken(providerId, apiKey, authPath = defaultCodexAuthPath()) {
+function readProviderTokens(tokensPath = defaultProviderTokensPath()) {
+  try {
+    const data = JSON.parse(fs.readFileSync(tokensPath, "utf8"));
+    return data && typeof data.tokens === "object" && !Array.isArray(data.tokens) ? data : { tokens: {} };
+  } catch (error) {
+    if (error && error.code === "ENOENT") return { tokens: {} };
+    return { tokens: {} };
+  }
+}
+
+function writeProviderTokens(data, tokensPath = defaultProviderTokensPath()) {
+  try {
+    fs.mkdirSync(path.dirname(tokensPath), { recursive: true });
+    fs.writeFileSync(tokensPath, JSON.stringify({ version: 1, tokens: data.tokens || {} }, null, 2) + "\n", {
+      encoding: "utf8",
+      mode: 0o600
+    });
+  } catch {
+    /* ignore write errors */
+  }
+}
+
+function providerTokensPathForConfig(filePath) {
+  return path.join(path.dirname(filePath), PROVIDER_TOKENS_FILE);
+}
+
+function saveProviderToken(providerId, apiKey, tokensPath = defaultProviderTokensPath()) {
   if (!providerId || typeof providerId !== "string") return;
   const id = providerId.trim();
   const key = typeof apiKey === "string" ? apiKey.trim() : "";
   if (!key) return;
 
-  const auth = readAuthJson(authPath);
-  auth.auth_mode = "apikey";
-  auth.tokens = auth.tokens || {};
-  auth.tokens[id] = key;
+  const store = readProviderTokens(tokensPath);
+  store.tokens[id] = key;
+  writeProviderTokens(store, tokensPath);
+}
 
+function syncActiveProviderToken(providerId, filePath = defaultCodexConfigPath()) {
+  const id = typeof providerId === "string" ? providerId.trim() : "";
+  if (!id) return;
+
+  let raw = "";
+  try {
+    raw = fs.readFileSync(filePath, "utf8");
+  } catch {
+    return;
+  }
+  const isOpenAi = id.toLowerCase() === "openai" || id.toLowerCase() === "default";
+  const provider = isOpenAi ? null : readSection(raw, `model_providers.${id}`);
+  if (!isOpenAi && !readBooleanInBlock(provider || "", "requires_openai_auth")) return;
+
+  const tokenStore = readProviderTokens(providerTokensPathForConfig(filePath));
+  const token = tokenStore.tokens[id];
+  const authPath = path.join(path.dirname(filePath), "auth.json");
+  const auth = readAuthJson(authPath);
+  if (typeof token === "string" && token.trim()) {
+    auth.auth_mode = "apikey";
+    auth.OPENAI_API_KEY = token.trim();
+  } else {
+    delete auth.OPENAI_API_KEY;
+  }
+  // `tokens` was an extension-specific legacy field. Codex must never see it.
+  if (auth.tokens) delete auth.tokens;
   writeAuthJson(auth, authPath);
 }
 
@@ -76,8 +135,24 @@ function sanitizeAndMigrateProviders(filePath = defaultCodexConfigPath()) {
     let raw = fs.readFileSync(filePath, "utf8");
     let changed = false;
     const authPath = path.join(path.dirname(filePath), "auth.json");
+    const tokensPath = providerTokensPathForConfig(filePath);
     const auth = readAuthJson(authPath);
+    const tokenStore = readProviderTokens(tokensPath);
     let authChanged = false;
+    let tokenStoreChanged = false;
+
+    // Versions before 1.0.6 kept provider secrets in auth.json.tokens. Move
+    // them out once and remove that non-Codex field from auth.json.
+    if (auth.tokens && typeof auth.tokens === "object" && !Array.isArray(auth.tokens)) {
+      for (const [id, token] of Object.entries(auth.tokens)) {
+        if (typeof token === "string" && token.trim() && !tokenStore.tokens[id]) {
+          tokenStore.tokens[id] = token.trim();
+          tokenStoreChanged = true;
+        }
+      }
+      delete auth.tokens;
+      authChanged = true;
+    }
 
     const providerRegex = /^\s*\[model_providers\.([A-Za-z0-9_-]+)\]\s*(?:#.*)?$/gm;
     let match;
@@ -90,26 +165,22 @@ function sanitizeAndMigrateProviders(filePath = defaultCodexConfigPath()) {
       const section = readSection(raw, `model_providers.${id}`);
       if (!section) continue;
       const currentEnvKey = readStringInBlock(section, "env_key");
-      const hasAuthCommand = Boolean(readStringInBlock(readProviderAuthSection(raw, id) || "", "command"));
+      const hasAuthCommand = Boolean(readProviderAuthSection(raw, id));
       const legacyRawToken = currentEnvKey && !isValidEnvVarName(currentEnvKey) ? currentEnvKey : "";
-      const storedToken = auth?.tokens?.[id]
+      const storedToken = tokenStore.tokens[id]
         || (currentEnvKey && auth?.[currentEnvKey])
         || (!currentEnvKey && auth?.OPENAI_API_KEY)
         || "";
-      const shouldMigrate = Boolean(legacyRawToken || (!hasAuthCommand && storedToken));
+      const shouldMigrate = Boolean(legacyRawToken || hasAuthCommand || tokenStore.tokens[id]);
       if (shouldMigrate) {
-        // Move legacy environment-based credentials into auth.json when they are
-        // already available. From then on Codex reads them through auth.command.
+        // Provider secrets are private extension state. Codex itself receives
+        // the selected secret only through auth.json.OPENAI_API_KEY.
         const token = legacyRawToken || storedToken;
-        if (token) {
-        auth.auth_mode = "apikey";
-        auth.tokens = auth.tokens || {};
-          auth.tokens[id] = token;
-          authChanged = true;
+        if (typeof token === "string" && token.trim() && !tokenStore.tokens[id]) {
+          tokenStore.tokens[id] = token.trim();
+          tokenStoreChanged = true;
         }
 
-        // env_key is deliberately removed: Codex resolves it from process.env,
-        // whereas auth.command can retrieve the secret from auth.json.
         const name = readStringInBlock(section, "name") || id;
         const baseUrl = readStringInBlock(section, "base_url") || "";
         const wireApi = readStringInBlock(section, "wire_api") || readStringInBlock(section, "wire_format") || "responses";
@@ -129,6 +200,13 @@ function sanitizeAndMigrateProviders(filePath = defaultCodexConfigPath()) {
     if (authChanged) {
       writeAuthJson(auth, authPath);
     }
+    if (tokenStoreChanged) {
+      writeProviderTokens(tokenStore, tokensPath);
+    }
+    if (changed) {
+      const activeId = readTopLevelString(raw, "model_provider");
+      if (activeId) syncActiveProviderToken(activeId, filePath);
+    }
   } catch (error) {
     if (error && error.code !== "ENOENT") {
       /* ignore */
@@ -140,8 +218,7 @@ function readAllModelProviders(filePath = defaultCodexConfigPath()) {
   sanitizeAndMigrateProviders(filePath);
   try {
     const raw = fs.readFileSync(filePath, "utf8");
-    const authPath = path.join(path.dirname(filePath), "auth.json");
-    const auth = readAuthJson(authPath);
+    const tokenStore = readProviderTokens(providerTokensPathForConfig(filePath));
     const providers = [];
     const providerRegex = /^\s*\[model_providers\.([A-Za-z0-9_-]+)\]\s*(?:#.*)?$/gm;
     let match;
@@ -150,13 +227,13 @@ function readAllModelProviders(filePath = defaultCodexConfigPath()) {
       const section = readSection(raw, `model_providers.${id}`);
       if (section) {
         const envKey = readStringInBlock(section, "env_key");
-        const apiKey = auth?.tokens?.[id] || (envKey && auth?.[envKey] ? auth[envKey] : "") || auth?.OPENAI_API_KEY || "";
+        const apiKey = tokenStore.tokens[id] || "";
         providers.push({
           id,
           name: readStringInBlock(section, "name") || id,
           baseUrl: readStringInBlock(section, "base_url") || "",
           envKey,
-          authMode: envKey ? "environment" : "authJson",
+          authMode: readBooleanInBlock(section, "requires_openai_auth") ? "openaiAuth" : (envKey ? "environment" : "none"),
           apiKey,
           wireApi: readStringInBlock(section, "wire_api") || readStringInBlock(section, "wire_format") || "responses"
         });
@@ -211,11 +288,21 @@ function setActiveModelProvider(providerId, filePath = defaultCodexConfigPath())
   }
   const id = typeof providerId === "string" ? providerId.trim() : "";
   const isDefaultOpenAi = !id || id.toLowerCase() === "openai" || id.toLowerCase() === "default";
+  const currentProviderId = readTopLevelString(raw, "model_provider");
   const updated = isDefaultOpenAi
     ? raw.replace(/^\s*model_provider\s*=.*$/m, "").trimEnd() + "\n"
     : writeTopLevelString(raw, "model_provider", id);
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, updated, "utf8");
+
+  if (!isDefaultOpenAi && (!currentProviderId || currentProviderId.toLowerCase() === "openai" || currentProviderId.toLowerCase() === "default")) {
+    const authPath = path.join(path.dirname(filePath), "auth.json");
+    const auth = readAuthJson(authPath);
+    if (typeof auth.OPENAI_API_KEY === "string" && auth.OPENAI_API_KEY.trim()) {
+      saveProviderToken("openai", auth.OPENAI_API_KEY, providerTokensPathForConfig(filePath));
+    }
+  }
+  syncActiveProviderToken(isDefaultOpenAi ? "openai" : id, filePath);
 
   return readCodexModelConfig(filePath);
 }
@@ -287,31 +374,14 @@ function removeProviderDefinition(raw, providerId) {
 }
 
 function buildProviderDefinition({ id, name, baseUrl, wireApi }) {
-  const args = buildAuthJsonCommandArgs(id);
   return [
     `[model_providers.${id}]`,
     `name = "${escapeTomlBasicString(name)}"`,
     `base_url = "${escapeTomlBasicString(baseUrl)}"`,
     `wire_api = "${escapeTomlBasicString(wireApi)}"`,
-    "",
-    `[model_providers.${id}.auth]`,
-    `command = "${AUTH_JSON_COMMAND}"`,
-    `args = [${args.map(value => `"${escapeTomlBasicString(value)}"`).join(", ")}]`,
-    "timeout_ms = 5000",
-    "refresh_interval_ms = 300000",
+    "requires_openai_auth = true",
     ""
   ].join("\n");
-}
-
-function buildAuthJsonCommandArgs(providerId) {
-  const script = [
-    "const fs=require('fs');const os=require('os');const path=require('path');",
-    "const home=process.env.CODEX_HOME&&path.isAbsolute(process.env.CODEX_HOME)?process.env.CODEX_HOME:path.join(os.homedir(),'.codex');",
-    "const auth=JSON.parse(fs.readFileSync(path.join(home,'auth.json'),'utf8'));",
-    "const token=(auth.tokens&&auth.tokens[process.argv[1]])||auth.OPENAI_API_KEY;",
-    "if(typeof token!=='string'||!token.trim())process.exit(1);process.stdout.write(token.trim());"
-  ].join("");
-  return ["-e", script, providerId];
 }
 
 function upsertModelProvider(providerId, data = {}, filePath = defaultCodexConfigPath()) {
@@ -338,10 +408,10 @@ function upsertModelProvider(providerId, data = {}, filePath = defaultCodexConfi
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, updated, "utf8");
 
-  // Save token in auth.json if provided
-  const authPath = path.join(path.dirname(filePath), "auth.json");
+  // Save the provider-scoped token outside Codex's auth.json.
+  const tokensPath = providerTokensPathForConfig(filePath);
   if (apiKey) {
-    saveProviderToken(id, apiKey, authPath);
+    saveProviderToken(id, apiKey, tokensPath);
   }
 
   if (data.activate === true) {
@@ -362,18 +432,15 @@ function deleteModelProvider(providerId, filePath = defaultCodexConfigPath()) {
     throw error;
   }
 
-  const sectionName = `model_providers.${id}`;
-  const section = readSection(raw, sectionName);
   let updated = removeProviderDefinition(raw, id);
 
-  // Clean from auth.json
-  const authPath = path.join(path.dirname(filePath), "auth.json");
-  const auth = readAuthJson(authPath);
-  let authChanged = false;
-
-  if (auth?.tokens?.[id]) {
-    delete auth.tokens[id];
-    authChanged = true;
+  // Clean the provider-scoped secret without touching unrelated Codex auth.
+  const tokensPath = providerTokensPathForConfig(filePath);
+  const tokenStore = readProviderTokens(tokensPath);
+  let tokenStoreChanged = false;
+  if (tokenStore.tokens[id]) {
+    delete tokenStore.tokens[id];
+    tokenStoreChanged = true;
   }
   const activeId = readTopLevelString(raw, "model_provider");
   if (activeId === id) {
@@ -381,19 +448,19 @@ function deleteModelProvider(providerId, filePath = defaultCodexConfigPath()) {
     const remaining = existing.filter((p) => p.id !== id);
     const nextProviderId = remaining.length > 0 ? remaining[0].id : "";
     if (nextProviderId) {
-      if (authChanged) writeAuthJson(auth, authPath);
+      if (tokenStoreChanged) writeProviderTokens(tokenStore, tokensPath);
       updated = writeTopLevelString(updated, "model_provider", nextProviderId);
       fs.writeFileSync(filePath, updated, "utf8");
       return setActiveModelProvider(nextProviderId, filePath);
     }
     // No remaining custom providers -> fallback to OpenAI default
-    if (authChanged) writeAuthJson(auth, authPath);
+    if (tokenStoreChanged) writeProviderTokens(tokenStore, tokensPath);
     updated = updated.replace(/^\s*model_provider\s*=.*$/m, "").trimEnd() + "\n";
     fs.writeFileSync(filePath, updated, "utf8");
     return setActiveModelProvider("openai", filePath);
   }
 
-  if (authChanged) writeAuthJson(auth, authPath);
+  if (tokenStoreChanged) writeProviderTokens(tokenStore, tokensPath);
   fs.writeFileSync(filePath, updated, "utf8");
   return readCodexModelConfig(filePath);
 }
@@ -423,15 +490,14 @@ function readModelProvider(raw, providerName, filePath = defaultCodexConfigPath(
   const section = readSection(raw, `model_providers.${providerName}`);
   if (!section) return null;
   const envKey = readStringInBlock(section, "env_key");
-  const authPath = path.join(path.dirname(filePath), "auth.json");
-  const auth = readAuthJson(authPath);
-  const apiKey = auth?.tokens?.[providerName] || (envKey && auth?.[envKey] ? auth[envKey] : "") || auth?.OPENAI_API_KEY || "";
+  const tokenStore = readProviderTokens(providerTokensPathForConfig(filePath));
+  const apiKey = tokenStore.tokens[providerName] || "";
   return {
     id: providerName,
     name: readStringInBlock(section, "name") || providerName,
     baseUrl: readStringInBlock(section, "base_url") || "",
     envKey,
-    authMode: envKey ? "environment" : "authJson",
+    authMode: readBooleanInBlock(section, "requires_openai_auth") ? "openaiAuth" : (envKey ? "environment" : "none"),
     apiKey,
     wireApi: readStringInBlock(section, "wire_api") || readStringInBlock(section, "wire_format") || "responses"
   };
@@ -453,6 +519,11 @@ function readSection(raw, sectionName) {
 function readStringInBlock(raw, key) {
   const match = raw.match(new RegExp(`^\\s*${escapeRegExp(key)}\\s*=\\s*"((?:\\\\.|[^"\\\\])*)"\\s*(?:#.*)?$`, "m"));
   return match ? unescapeTomlBasicString(match[1]) : null;
+}
+
+function readBooleanInBlock(raw, key) {
+  const match = raw.match(new RegExp(`^\\s*${escapeRegExp(key)}\\s*=\\s*(true|false)\\s*(?:#.*)?$`, "mi"));
+  return match ? match[1].toLowerCase() === "true" : false;
 }
 
 
@@ -547,10 +618,11 @@ async function fetchProviderModelsFromConfig(filePath = defaultCodexConfigPath()
 function resolveProviderToken(configPath, envKey, env = process.env, providerId = null) {
   const authPath = path.join(path.dirname(configPath), "auth.json");
   const auth = readAuthJson(authPath);
+  const tokenStore = readProviderTokens(providerTokensPathForConfig(configPath));
 
-  // 1. Direct provider token from auth.json
-  if (providerId && auth?.tokens?.[providerId]) {
-    return auth.tokens[providerId];
+  // 1. Provider-scoped token from the extension-owned credentials file.
+  if (providerId && tokenStore.tokens[providerId]) {
+    return tokenStore.tokens[providerId];
   }
 
   if (typeof envKey === "string") {
@@ -569,7 +641,7 @@ function resolveProviderToken(configPath, envKey, env = process.env, providerId 
     }
   }
 
-  // 5. Active token in auth.json OPENAI_API_KEY
+  // 5. Active token in Codex's auth.json OPENAI_API_KEY
   if (typeof auth?.OPENAI_API_KEY === "string" && auth.OPENAI_API_KEY) {
     return auth.OPENAI_API_KEY;
   }

@@ -927,8 +927,8 @@ class DashboardProvider {
         <input type="text" class="input-field" id="provider-input-id" placeholder="Provider ID (e.g. omni)" required />
         <input type="text" class="input-field" id="provider-input-name" placeholder="Display Name (e.g. Omni Route)" />
         <input type="url" class="input-field" id="provider-input-url" placeholder="https://api.example.com/v1" required />
-        <input type="password" class="input-field" id="provider-input-key" placeholder="API Key / Bearer Token (stored in auth.json)" autocomplete="new-password" />
-        <div class="setting-desc" id="txt-provider-auth-note">The key is stored in ~/.codex/auth.json and supplied to Codex without an exported environment variable.</div>
+        <input type="password" class="input-field" id="provider-input-key" placeholder="API Key / Bearer Token (stored separately)" autocomplete="new-password" />
+        <div class="setting-desc" id="txt-provider-auth-note">The key is stored in ~/.codex/provider-tokens.json. Activating this provider copies it to auth.json as OPENAI_API_KEY.</div>
         <div style="display:flex; gap:6px; margin-top:4px;">
           <button type="submit" class="btn btn-sm btn-primary" id="btn-save-provider" style="flex:1;">Save & Activate</button>
           <button type="button" class="btn btn-sm" id="btn-cancel-provider">Cancel</button>
@@ -1146,8 +1146,8 @@ class DashboardProvider {
       providerIdPlaceholder: "شناسه (مثال: omni)",
       providerNamePlaceholder: "نام نمایشی (مثال: Omni Route)",
       providerUrlPlaceholder: "https://api.example.com/v1",
-      providerApiKeyPlaceholder: "کلید دسترسی / API Key (در auth.json ذخیره می‌شود)",
-      providerAuthNote: "کلید در ~/.codex/auth.json نگهداری می‌شود و بدون export شدن متغیر محیطی به Codex داده می‌شود.",
+      providerApiKeyPlaceholder: "کلید دسترسی / API Key (جداگانه ذخیره می‌شود)",
+      providerAuthNote: "کلید در ~/.codex/provider-tokens.json نگهداری می‌شود؛ با فعال‌سازی پروایدر، در OPENAI_API_KEY فایل auth.json قرار می‌گیرد.",
       providerFormNewTitle: "افزودن پروایدر جدید",
       providerFormEditTitle: "ویرایش پروایدر",
       providerKeyBadge: "دارای کلید",
@@ -1215,8 +1215,8 @@ class DashboardProvider {
       providerIdPlaceholder: "المعرف (مثال: omni)",
       providerNamePlaceholder: "الاسم المعروض (مثال: Omni Route)",
       providerUrlPlaceholder: "https://api.example.com/v1",
-      providerApiKeyPlaceholder: "مفتاح الوصول / API Key (يُخزن في auth.json)",
-      providerAuthNote: "يُحفظ المفتاح في ~/.codex/auth.json ويُمرر إلى Codex دون تصدير متغير بيئة.",
+      providerApiKeyPlaceholder: "مفتاح الوصول / API Key (يُخزن بشكل منفصل)",
+      providerAuthNote: "يُحفظ المفتاح في ~/.codex/provider-tokens.json؛ وعند تفعيل المزوّد يُنسخ إلى OPENAI_API_KEY في auth.json.",
       providerFormNewTitle: "إضافة مزود جديد",
       providerFormEditTitle: "تعديل المزود",
       providerKeyBadge: "مفتاح مضبوط",
@@ -1284,8 +1284,8 @@ class DashboardProvider {
       providerIdPlaceholder: "Provider ID (e.g. omni)",
       providerNamePlaceholder: "Display Name (e.g. Omni Route)",
       providerUrlPlaceholder: "https://api.example.com/v1",
-      providerApiKeyPlaceholder: "API Key / Bearer Token (stored in auth.json)",
-      providerAuthNote: "The key is stored in ~/.codex/auth.json and supplied to Codex without an exported environment variable.",
+      providerApiKeyPlaceholder: "API Key / Bearer Token (stored separately)",
+      providerAuthNote: "The key is stored in ~/.codex/provider-tokens.json. Activating this provider copies it to auth.json as OPENAI_API_KEY.",
       providerFormNewTitle: "Add New Provider",
       providerFormEditTitle: "Edit Provider",
       providerKeyBadge: "Key Set",
@@ -1670,7 +1670,7 @@ class DashboardProvider {
       meta.className = "provider-item-meta";
       meta.textContent = "ID: " + p.id
         + " | Base: " + (p.baseUrl || "no url")
-        + " | Auth: " + (p.authMode === "authJson" ? "auth.json" : (p.envKey || "environment"));
+        + " | Auth: " + (p.authMode === "openaiAuth" ? "OPENAI_API_KEY" : (p.envKey || "none"));
 
       const actions = document.createElement("div");
       actions.className = "provider-item-actions";

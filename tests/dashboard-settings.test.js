@@ -94,7 +94,7 @@ test("dashboard no longer renders the legacy product name and contains modern UI
   );
   assert.equal(manifest.name, "codex-nexus");
   assert.equal(manifest.publisher, "amirimatin");
-  assert.equal(manifest.version, "1.0.5");
+  assert.equal(manifest.version, "1.0.6");
   assert.equal(manifest.contributes.viewsContainers.activitybar[0].title, "Codex Nexus");
   assert.equal(
     manifest.contributes.views.codexNexus[0].name,
