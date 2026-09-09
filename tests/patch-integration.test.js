@@ -54,7 +54,7 @@ function runToggleScriptWithParagraph(initialText, { technical = false } = {}) {
 
     closest(selector) {
       if (selector.includes('pre') && technical) return this.kind === 'technical' ? this : this.parentElement;
-      if (selector === 'p,li,blockquote,h1,h2,h3,h4,h5,h6') {
+      if (selector.includes('p,li,blockquote')) {
         return this.kind === 'paragraph' ? this : null;
       }
       if (selector.includes('.vscode-markdown')) {
@@ -70,7 +70,7 @@ function runToggleScriptWithParagraph(initialText, { technical = false } = {}) {
 
     querySelectorAll(selector) {
       if (this.kind === 'body' && selector.includes('.vscode-markdown')) return [container];
-      if (this.kind === 'container' && selector === 'p,li,blockquote,h1,h2,h3,h4,h5,h6') {
+      if (this.kind === 'container' && selector.includes('p,li,blockquote')) {
         return [paragraph];
       }
       return [];

@@ -185,3 +185,136 @@ test("patcher buildWorkbenchUiCss() emits Monokai tokens and markdown styling", 
   assert.match(css, /color:\s*var\(--mk-h3\)/);
   assert.match(css, /border-right:\s*4px solid var\(--mk-blockquote\)/);
 });
+
+test("assets/persian-ui.css and patcher implement table RTL containment and styling", () => {
+  const cssAsset = fs.readFileSync(path.join(__dirname, "../assets/persian-ui.css"), "utf8");
+  const blocks = buildBlocks();
+  const cssPatcher = blocks.rtlAppendBlock;
+
+  for (const css of [cssAsset, cssPatcher]) {
+    assert.match(css, /\[class\*="_TableContainer_"\][^}]*max-width:\s*100%\s*!important/);
+    assert.match(css, /\[class\*="_TableContainer_"\][^}]*margin-inline:\s*0\s*!important/);
+    assert.match(css, /\[class\*="_TableScroller_"\][^}]*overflow-x:\s*auto\s*!important/);
+    assert.match(css, /\[class\*="_TableScroller_"\][^}]*direction:\s*rtl\s*!important/);
+    assert.match(css, /\[class\*="_TableWrapper_"\][^}]*margin-inline:\s*0\s*!important/);
+    assert.match(css, /table[^}]*direction:\s*rtl\s*!important/);
+    assert.match(css, /table[^}]*text-align:\s*right\s*!important/);
+    assert.match(css, /border:\s*1px solid var\(--mk-border\)\s*!important/);
+  }
+});
+
+test("buildWorkbenchUiCss implements table overflow containment and borders", () => {
+  const css = buildWorkbenchUiCss("'Vazirmatn', sans-serif", "./Vazir.woff", 0);
+  assert.match(css, /\.rendered-markdown table/);
+  assert.match(css, /overflow-x:\s*auto\s*!important/);
+  assert.match(css, /max-width:\s*100%\s*!important/);
+  assert.match(css, /border:\s*1px solid var\(--mk-border/);
+});
+
+test("browser renders RTL table within viewport without right-side overflow clipping", async (t) => {
+  const { execFile } = require("node:child_process");
+  const { promisify } = require("node:util");
+  const os = require("node:os");
+  const http = require("node:http");
+  const execFileAsync = promisify(execFile);
+  const chrome = process.env.CHROME_BIN || "/usr/bin/google-chrome";
+  if (!fs.existsSync(chrome)) {
+    t.skip("Chrome binary not available");
+    return;
+  }
+
+  const blocks = buildBlocks();
+  const fixtureHtml = `<!doctype html>
+<html lang="fa" data-vazirmatn="rtl" dir="rtl">
+<head>
+<meta charset="utf-8">
+<style>
+:root { --thread-content-margin: 24px; }
+body { margin: 0; padding: 20px; direction: rtl; }
+.viewport { width: 500px; overflow-x: hidden; border: 2px solid red; position: relative; box-sizing: border-box; }
+/* Codex default styles */
+._TableContainer_15pu8_33 {
+  width: calc(100% + (var(--thread-content-margin) * 2));
+  margin-inline: calc(var(--thread-content-margin) * -1);
+}
+._TableContainer_15pu8_33[data-wide-block] {
+  --wide-block-width: 800px;
+  width: var(--wide-block-width);
+  margin-left: calc((100% - var(--wide-block-width)) / 2);
+}
+._TableScroller_15pu8_447 { scrollbar-width: thin; overflow-x: auto; }
+._TableContainer_15pu8_33[data-wide-block] ._TableScroller_15pu8_447 { justify-content: safe center; display: flex; }
+._TableWrapper_15pu8_457 { width: fit-content; margin-inline: var(--thread-content-margin); }
+table { width: 900px; }
+${blocks.rtlAppendBlock}
+</style>
+</head>
+<body>
+<div class="viewport" id="viewport">
+  <div class="_TableContainer_15pu8_33" data-markdown-table="true" data-wide-block="true" id="container">
+    <div class="_TableScroller_15pu8_447" id="scroller">
+      <div class="_TableWrapper_15pu8_457" id="wrapper">
+        <table class="_Table_15pu8_33" id="table">
+          <tr>
+            <th id="rightmost-cell">راست‌ترین سلول (ستون اول)</th>
+            <th>ستون دوم</th>
+            <th id="leftmost-cell">چپ‌ترین سلول (ستون آخر)</th>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function runMeasurement() {
+  const vp = document.getElementById("viewport").getBoundingClientRect();
+  const cont = document.getElementById("container").getBoundingClientRect();
+  const rc = document.getElementById("rightmost-cell").getBoundingClientRect();
+  const scroller = document.getElementById("scroller");
+  const data = {
+    rightOverflowPastViewport: rc.right - vp.right,
+    containerRightOverflow: cont.right - vp.right,
+    initialScroll: scroller.scrollLeft,
+    scrollWidth: scroller.scrollWidth,
+    clientWidth: scroller.clientWidth
+  };
+  document.body.setAttribute("data-browser-result", encodeURIComponent(JSON.stringify(data)));
+};
+if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", runMeasurement); } else { runMeasurement(); }
+</script>
+</body>
+</html>`;
+
+  const server = http.createServer((req, res) => {
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    res.end(fixtureHtml);
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const { port } = server.address();
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "codex-table-test-"));
+
+  try {
+    const { stdout } = await execFileAsync(chrome, [
+      "--headless=new",
+      "--no-sandbox",
+      "--disable-gpu",
+      `--user-data-dir=${path.join(tempDir, "profile")}`,
+      "--virtual-time-budget=1000",
+      "--window-size=1000,600",
+      "--dump-dom",
+      `http://127.0.0.1:${port}/`
+    ], { maxBuffer: 4 * 1024 * 1024 });
+
+    const match = stdout.match(/data-browser-result="([^"]+)"/);
+    assert.ok(match, "Browser test did not output data-browser-result");
+    const result = JSON.parse(decodeURIComponent(match[1].replace(/&amp;/g, "&")));
+
+    // The rightmost cell and container MUST NOT overflow the viewport to the right
+    assert.ok(result.rightOverflowPastViewport <= 1, `Rightmost cell overflows by ${result.rightOverflowPastViewport}px`);
+    assert.ok(result.containerRightOverflow <= 1, `Container overflows by ${result.containerRightOverflow}px`);
+    assert.equal(result.initialScroll, 0, "Initial RTL scrollLeft must start at 0 (start of table)");
+    assert.ok(result.scrollWidth > result.clientWidth, "Table scroller must be scrollable horizontally");
+  } finally {
+    server.close();
+  }
+});

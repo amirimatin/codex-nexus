@@ -628,6 +628,115 @@ ${R} :is(
   border-top: 1px solid var(--mk-border) !important;
 }
 
+/* ── Markdown Tables & Codex Table Components in RTL ──
+   Codex defaults to breaking tables out with negative inline margins:
+     margin-inline: calc(var(--thread-content-margin, 24px) * -1)
+   and centering wide blocks via LTR margin-left:
+     margin-left: calc((100% - var(--wide-block-width)) / 2)
+   In RTL, this pushes the table container into the right overflow zone, and
+   flex safe-centering on _TableScroller_ permanently clips columns on the right
+   because Chromium cannot scroll to positive X coordinates in RTL.
+   We constrain the table container to 100% width, reset breakout margins to 0,
+   and ensure the scroller operates as a block container with horizontal scrolling. */
+${R} [class*="_TableContainer_"],
+${R} [data-markdown-table] {
+  max-width: 100% !important;
+  width: 100% !important;
+  margin-inline: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+}
+
+${R} [class*="_TableContainer_"][data-wide-block],
+${R} [data-markdown-table][data-wide-block] {
+  max-width: 100% !important;
+  width: 100% !important;
+  margin-inline: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+${R} [class*="_TableScroller_"] {
+  max-width: 100% !important;
+  width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: thin !important;
+  display: block !important;
+  justify-content: flex-start !important;
+  direction: rtl !important;
+  box-sizing: border-box !important;
+}
+
+${R} [class*="_TableContainer_"][data-wide-block] [class*="_TableScroller_"] {
+  justify-content: flex-start !important;
+  display: block !important;
+  direction: rtl !important;
+}
+
+${R} [class*="_TableWrapper_"] {
+  width: max-content !important;
+  min-width: 100% !important;
+  margin-inline: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  direction: rtl !important;
+  box-sizing: border-box !important;
+}
+
+${R} :is(
+  table, [class*="_Table_"],
+  .vscode-markdown table, .markdown-body table,
+  [class*="_markdownContent_"] table, [data-thread-find-target="conversation"] table
+) {
+  direction: rtl !important;
+  text-align: right !important;
+  border-collapse: collapse !important;
+  box-sizing: border-box !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  max-width: none !important;
+}
+
+${R} :is(
+  th, td,
+  [class*="_TableHeaderCell_"], [class*="_TableCell_"],
+  .vscode-markdown th, .vscode-markdown td,
+  .markdown-body th, .markdown-body td,
+  [class*="_markdownContent_"] th, [class*="_markdownContent_"] td,
+  [data-thread-find-target="conversation"] th, [data-thread-find-target="conversation"] td
+) {
+  direction: rtl !important;
+  text-align: right !important;
+  border: 1px solid var(--mk-border) !important;
+  padding: 8px 12px !important;
+  unicode-bidi: isolate !important;
+}
+
+${R} :is(
+  th, [class*="_TableHeaderCell_"],
+  .vscode-markdown th, .markdown-body th,
+  [class*="_markdownContent_"] th, [data-thread-find-target="conversation"] th
+) {
+  font-weight: 700 !important;
+  color: var(--mk-bold) !important;
+  background-color: var(--mk-inline-code-bg) !important;
+}
+
+/* Standalone Markdown tables outside scroller */
+${R} :is(.vscode-markdown, .markdown-body, [class*="_markdownContent_"], [data-thread-find-target="conversation"]) > table,
+${R} :is(.vscode-markdown, .markdown-body, [class*="_markdownContent_"], [data-thread-find-target="conversation"]) :not([class*="_TableScroller_"]):not([class*="_TableWrapper_"]) > table {
+  display: block !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: thin !important;
+  direction: rtl !important;
+  box-sizing: border-box !important;
+}
+
 /* ── Input panel font ── */
 ${R} .composer-input,
 ${R} .ProseMirror {
@@ -1025,7 +1134,7 @@ function buildToggleJs(customModel, customProvider) {
     '[class*="markdown-surface"]',
     '[class*="_markdownContent_"]'
   ].join(',');
-  var PROSE_BLOCK_SELECTOR = 'p,li,blockquote,h1,h2,h3,h4,h5,h6';
+  var PROSE_BLOCK_SELECTOR = 'p,li,blockquote,h1,h2,h3,h4,h5,h6,table,[data-markdown-table]';
   var TECHNICAL_SELECTOR = [
     'pre', 'code', 'kbd', 'samp', 'tt', '.hljs', '.xterm',
     '[data-markdown-copy="code-block"]', '[data-markdown-copy="inline-code"]',
@@ -1379,6 +1488,10 @@ function buildToggleJs(customModel, customProvider) {
     // A native dir attribute participates in bidi layout before the next
     // stylesheet/layout pass, which matters while React appends fade spans.
     if (el.getAttribute("dir") !== dir) el.setAttribute("dir", dir);
+    if (el.matches && el.matches('[data-markdown-table]')) {
+      var tbl = el.querySelector('table');
+      if (tbl && tbl.getAttribute("dir") !== dir) tbl.setAttribute("dir", dir);
+    }
   }
 
   function markNearestFlow(root) {
@@ -2883,6 +2996,46 @@ body.vscode-high-contrast,
 .rendered-markdown hr {
   border: 0 !important;
   border-top: 1px solid var(--mk-border) !important;
+}
+
+/* ── Markdown Tables in AI Chat & Copilot Chat ── */
+.interactive-session .rendered-markdown table,
+.interactive-session-container .rendered-markdown table,
+.interactive-item-container .rendered-markdown table,
+.chat-widget .rendered-markdown table,
+.chat-widget-container .rendered-markdown table,
+.chat-list-container .rendered-markdown table,
+.chat-markdown-part table,
+.rendered-markdown table {
+  display: block !important;
+  max-width: 100% !important;
+  width: max-content !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: thin !important;
+  border-collapse: collapse !important;
+  box-sizing: border-box !important;
+  margin-block: 12px !important;
+  margin-inline: 0 !important;
+}
+
+.interactive-session .rendered-markdown :is(th, td),
+.chat-widget .rendered-markdown :is(th, td),
+.chat-markdown-part :is(th, td),
+.rendered-markdown :is(th, td) {
+  border: 1px solid var(--mk-border, var(--vscode-widget-border, #403E41)) !important;
+  padding: 6px 12px !important;
+  text-align: start !important;
+  unicode-bidi: isolate !important;
+}
+
+.interactive-session .rendered-markdown th,
+.chat-widget .rendered-markdown th,
+.chat-markdown-part th,
+.rendered-markdown th {
+  background-color: var(--mk-inline-code-bg, rgba(255, 255, 255, 0.05)) !important;
+  font-weight: 700 !important;
+  color: var(--mk-bold) !important;
 }
 
 /* ── AI Chat Composer & Monaco Input View Lines ── */

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.8
+
+- Fixes Markdown table right-side clipping and overflow in Codex chat during RTL mode.
+- Neutralizes negative inline breakout margins and LTR margin-left wide-block centering in RTL layouts.
+- Replaces flex safe-centering on table scrollers with native block horizontal scroll containment, ensuring the rightmost table columns remain fully visible and scrollable.
+- Adds scoped Markdown table styling with Monokai border and typography tokens across Codex and VS Code AI Chat.
+
 ## 1.0.7
 
 - Implements full Monokai Pro syntax palette design tokens (`--mk-*`) across both dark and light themes.

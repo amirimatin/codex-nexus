@@ -510,6 +510,99 @@ hr {
   border-color: var(--mk-border) !important;
 }
 
+/* ── Markdown Tables & Codex Table Components (RTL & Containment) ── */
+.markdown-body table,
+[class*="_TableContainer_"],
+[data-markdown-table] {
+  max-width: 100% !important;
+  width: 100% !important;
+  margin-inline: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+}
+
+[class*="_TableContainer_"][data-wide-block],
+[data-markdown-table][data-wide-block] {
+  max-width: 100% !important;
+  width: 100% !important;
+  margin-inline: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+[class*="_TableScroller_"] {
+  max-width: 100% !important;
+  width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: thin !important;
+  display: block !important;
+  justify-content: flex-start !important;
+  direction: rtl !important;
+  box-sizing: border-box !important;
+}
+
+[class*="_TableContainer_"][data-wide-block] [class*="_TableScroller_"] {
+  justify-content: flex-start !important;
+  display: block !important;
+  direction: rtl !important;
+}
+
+[class*="_TableWrapper_"] {
+  width: max-content !important;
+  min-width: 100% !important;
+  margin-inline: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  direction: rtl !important;
+  box-sizing: border-box !important;
+}
+
+table,
+[class*="_Table_"],
+.markdown-body table {
+  direction: rtl !important;
+  text-align: right !important;
+  border-collapse: collapse !important;
+  box-sizing: border-box !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  max-width: none !important;
+}
+
+th, td,
+[class*="_TableHeaderCell_"],
+[class*="_TableCell_"],
+.markdown-body th,
+.markdown-body td {
+  direction: rtl !important;
+  text-align: right !important;
+  border: 1px solid var(--mk-border) !important;
+  padding: 8px 12px !important;
+  unicode-bidi: isolate !important;
+}
+
+th,
+[class*="_TableHeaderCell_"],
+.markdown-body th {
+  font-weight: 700 !important;
+  color: var(--mk-bold) !important;
+  background-color: var(--mk-inline-code-bg) !important;
+}
+
+.markdown-body > table,
+.markdown-body :not([class*="_TableScroller_"]):not([class*="_TableWrapper_"]) > table {
+  display: block !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: thin !important;
+  direction: rtl !important;
+  box-sizing: border-box !important;
+}
+
 /* ── Container direction & isolation ── */
 [class="group flex min-w-0 flex-col"] > :first-child,
 [class="group flex min-w-0 flex-col"] > :first-child .text-left,
