@@ -2,142 +2,207 @@
 /* Do not load this file into VS Code core or unrelated webviews. */
 
 @font-face {
-  font-family: 'Noto Sans Arabic';
-  src: url('./fonts/haja/noto-sans-arabic-v33-arabic.woff2') format('woff2');
+  font-family: "Noto Sans Arabic";
+  src: url("./fonts/haja/noto-sans-arabic-v33-arabic.woff2") format("woff2");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Noto Sans Arabic UI';
-  src: url('./fonts/haja/noto-sans-arabic-ui-v30.woff2') format('woff2');
+  font-family: "Noto Sans Arabic UI";
+  src: url("./fonts/haja/noto-sans-arabic-ui-v30.woff2") format("woff2");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 
-:root {
-  --md-text: #2f2d3a;
-  --md-heading-1: #964660;
-  --md-heading-2: #5d7045;
-  --md-heading-3: #735998;
-  --md-heading-4: #6b5ea4;
-  --md-heading-5: #3e6f78;
-  --md-heading-6: #b0802a;
-  --md-link: #0f62fe;
-  --md-link-hover: #3d79ff;
-  --md-bold: #0e6f7c;
-  --md-list: #5d596b;
-  --md-inline-code-bg: #f5f5f8;
-  --md-inline-code-text: #2d2a39;
-  --md-pre-bg: #f3f4f9;
-  --md-pre-text: #282636;
-  --md-blockquote-bg: #f5f5f8;
-  --md-blockquote-text: #3c3950;
-  --md-blockquote-border: #ccd0dd;
-  --md-blockquote-accent: #8a8f98;
-  --md-code-border: #d9dce8;
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("./Vazir.woff") format("woff");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
 }
 
-body.vscode-dark, body.vscode-high-contrast {
-  --md-text: #e7e9f6;
-  --md-heading-1: #ff9cc5;
-  --md-heading-2: #c6f08e;
-  --md-heading-3: #caa6ff;
-  --md-heading-4: #c0b4ff;
-  --md-heading-5: #8fe4dd;
-  --md-heading-6: #f3d79a;
-  --md-link: #7cc4ff;
-  --md-link-hover: #b5dcff;
-  --md-bold: #63e1db;
-  --md-list: #d3d8f0;
-  --md-inline-code-bg: #1e232e;
-  --md-inline-code-text: #f6f7ff;
-  --md-pre-bg: #151a22;
-  --md-pre-text: #e4e8fb;
-  --md-blockquote-bg: #1d222c;
-  --md-blockquote-text: #d8dbef;
-  --md-blockquote-border: #3f4458;
-  --md-blockquote-accent: #9197ae;
-  --md-code-border: #45495b;
+/* ── Monokai Syntax Palette Design Tokens (Light Theme Default) ── */
+:root {
+  --mk-bg: #FAF8F2;
+  --mk-text: #403E41;
+  --mk-h1: #D81B60;
+  --mk-h2: #E56B2F;
+  --mk-h3: #B88600;
+  --mk-h4: #4F8A10;
+  --mk-h5: #008C95;
+  --mk-h6: #7655B8;
+  --mk-bold: #272522;
+  --mk-italic: #7655B8;
+  --mk-link: #008C95;
+  --mk-link-hover: #4F8A10;
+  --mk-inline-code-text: #C2185B;
+  --mk-inline-code-bg: #F1EEE5;
+  --mk-code-block-bg: #F1EEE5;
+  --mk-blockquote: #4F8A10;
+  --mk-blockquote-bg: rgba(79, 138, 16, 0.06);
+  --mk-highlight: #D4A017;
+  --mk-muted: #78716C;
+  --mk-border: #D6D3D1;
+
+  /* Backward compatibility aliases */
+  --md-text: var(--mk-text);
+  --md-heading-1: var(--mk-h1);
+  --md-heading-2: var(--mk-h2);
+  --md-heading-3: var(--mk-h3);
+  --md-heading-4: var(--mk-h4);
+  --md-heading-5: var(--mk-h5);
+  --md-heading-6: var(--mk-h6);
+  --md-link: var(--mk-link);
+  --md-link-hover: var(--mk-link-hover);
+  --md-bold: var(--mk-bold);
+  --md-list: var(--mk-h3);
+  --md-inline-code-bg: var(--mk-inline-code-bg);
+  --md-inline-code-text: var(--mk-inline-code-text);
+  --md-pre-bg: var(--mk-code-block-bg);
+  --md-pre-text: var(--mk-text);
+  --md-blockquote-bg: var(--mk-blockquote-bg);
+  --md-blockquote-text: var(--mk-text);
+  --md-blockquote-border: var(--mk-blockquote);
+  --md-blockquote-accent: var(--mk-blockquote);
+  --md-code-border: var(--mk-border);
+}
+
+/* ── Monokai Syntax Palette Design Tokens (Dark Theme) ── */
+body.vscode-dark,
+body.vscode-high-contrast,
+:root[data-theme="dark"],
+[data-vscode-theme-kind*="dark"],
+[data-vscode-theme-kind*="high-contrast"],
+.dark {
+  --mk-bg: #2D2A2E;
+  --mk-text: #FCFCFA;
+  --mk-h1: #FF6188;
+  --mk-h2: #FC9867;
+  --mk-h3: #FFD866;
+  --mk-h4: #A9DC76;
+  --mk-h5: #78DCE8;
+  --mk-h6: #AB9DF2;
+  --mk-bold: #FFFFFF;
+  --mk-italic: #AB9DF2;
+  --mk-link: #78DCE8;
+  --mk-link-hover: #A9DC76;
+  --mk-inline-code-text: #FFD866;
+  --mk-inline-code-bg: #221F22;
+  --mk-code-block-bg: #221F22;
+  --mk-blockquote: #A9DC76;
+  --mk-blockquote-bg: rgba(169, 220, 118, 0.06);
+  --mk-highlight: #FC9867;
+  --mk-muted: #939293;
+  --mk-border: #403E41;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not(.vscode-light) {
+    --mk-bg: #2D2A2E;
+    --mk-text: #FCFCFA;
+    --mk-h1: #FF6188;
+    --mk-h2: #FC9867;
+    --mk-h3: #FFD866;
+    --mk-h4: #A9DC76;
+    --mk-h5: #78DCE8;
+    --mk-h6: #AB9DF2;
+    --mk-bold: #FFFFFF;
+    --mk-italic: #AB9DF2;
+    --mk-link: #78DCE8;
+    --mk-link-hover: #A9DC76;
+    --mk-inline-code-text: #FFD866;
+    --mk-inline-code-bg: #221F22;
+    --mk-code-block-bg: #221F22;
+    --mk-blockquote: #A9DC76;
+    --mk-blockquote-bg: rgba(169, 220, 118, 0.06);
+    --mk-highlight: #FC9867;
+    --mk-muted: #939293;
+    --mk-border: #403E41;
+  }
 }
 
 * {
-  font-family: Vazirmatn, JetBrains Mono !important;
+  font-family: Vazirmatn, JetBrains Mono, sans-serif !important;
   letter-spacing: 0.5px !important;
-  font-size: 15px !important;
-  line-height: 1.9 !important;
 }
 
 body {
-  color: var(--md-text) !important;
+  background-color: var(--mk-bg) !important;
+  color: var(--mk-text) !important;
   font-family: Vazirmatn, system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
-  font-size: 18px !important;
-  line-height: 1.9 !important;
+  font-size: 16px !important;
+  line-height: 1.85 !important;
   -webkit-font-smoothing: antialiased !important;
   padding: 16px !important;
   text-rendering: optimizeLegibility !important;
+  direction: rtl !important;
 }
 
+/* ── Typography Specs ── */
 h1 {
-  color: var(--md-heading-1) !important;
-  font-size: 1.8rem  !important;
+  color: var(--mk-h1) !important;
+  font-size: 1.85rem !important;
   font-weight: 800 !important;
-  line-height: 1.3 !important;
-  margin: 28px 0 16px 0 !important;
+  line-height: 1.35 !important;
+  margin: 24px 0 14px 0 !important;
   text-align: right !important;
 }
 
 h2 {
-  color: var(--md-heading-2) !important;
-  font-size: 1.7rem  !important;
+  color: var(--mk-h2) !important;
+  font-size: 1.55rem !important;
   font-weight: 800 !important;
-  line-height: 1.35 !important;
-  margin: 26px 0 14px 0 !important;
+  line-height: 1.4 !important;
+  margin: 20px 0 12px 0 !important;
   text-align: right !important;
 }
 
 h3 {
-  color: var(--md-heading-3) !important;
-  font-size: 1.6rem  !important;
-  font-weight: 800 !important;
-  line-height: 1.4 !important;
-  margin: 24px 0 12px 0 !important;
-  text-align: right !important;
-}
-
-h4 {
-  color: var(--md-heading-4) !important;
-  font-size: 1.5rem  !important;
-  font-weight: 800 !important;
+  color: var(--mk-h3) !important;
+  font-size: 1.35rem !important;
+  font-weight: 700 !important;
   line-height: 1.45 !important;
-  margin: 22px 0 12px 0 !important;
-  text-align: right !important;
-}
-
-h5 {
-  color: var(--md-heading-5) !important;
-  font-size: 1.4rem  !important;
-  font-weight: 800 !important;
-  line-height: 1.5 !important;
   margin: 18px 0 10px 0 !important;
   text-align: right !important;
 }
 
-h6 {
-  color: var(--md-heading-6) !important;
-  font-size: 1.3rem !important;
-  font-weight: 800 !important;
+h4 {
+  color: var(--mk-h4) !important;
+  font-size: 1.2rem !important;
+  font-weight: 700 !important;
+  line-height: 1.5 !important;
+  margin: 16px 0 8px 0 !important;
+  text-align: right !important;
+}
+
+h5 {
+  color: var(--mk-h5) !important;
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
   line-height: 1.55 !important;
-  margin: 16px 0 10px 0 !important;
+  margin: 14px 0 6px 0 !important;
+  text-align: right !important;
+}
+
+h6 {
+  color: var(--mk-h6) !important;
+  font-size: 1.0rem !important;
+  font-weight: 600 !important;
+  line-height: 1.6 !important;
+  margin: 12px 0 6px 0 !important;
   text-align: right !important;
 }
 
 p {
+  color: var(--mk-text) !important;
+  font-family: "Vazirmatn", system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+  line-height: 1.85 !important;
+  direction: rtl !important;
   margin: 8px 0 18px 0 !important;
-  font-weight: 600 !important;
-  font-size: 16px;
   text-align: right !important;
 }
 
@@ -146,37 +211,37 @@ p + p {
 }
 
 a {
-  color: var(--md-link) !important;
+  color: var(--mk-link) !important;
   font-weight: 600 !important;
   text-underline-offset: 0.18em !important;
   transition: color 150ms ease-in-out !important;
 }
 
 a:hover {
-  color: var(--md-link-hover) !important;
+  color: var(--mk-link-hover) !important;
   text-decoration-thickness: 2px !important;
 }
 
-b {
-  color: var(--md-bold) !important;
+b, strong {
+  color: var(--mk-bold) !important;
   font-weight: 800 !important;
 }
 
-strong {
-  color: var(--md-bold) !important;
-  font-weight: 800 !important;
+em, i {
+  color: var(--mk-italic) !important;
+  font-style: italic !important;
 }
 
 ul {
-  margin: 15px 15px 0 !important;
-  padding-inline-start: 1.4em !important;
+  margin: 15px 15px 0 8px !important;
+  padding-inline-start: 1.6em !important;
   padding-inline-end: 0.6em !important;
   list-style-position: outside !important;
   text-align: start !important;
 }
 
 ol {
-  margin: 15px 15px 0 !important;
+  margin: 15px 15px 0 8px !important;
   padding-inline-start: 1.6em !important;
   padding-inline-end: 0.6em !important;
   list-style-position: outside !important;
@@ -184,36 +249,49 @@ ol {
 }
 
 li {
-  color: var(--md-list) !important;
-  margin: 15px 15px 0 !important;
+  color: var(--mk-text) !important;
+  margin: 8px 0 !important;
   text-align: start !important;
 }
 
+li::marker, ul > li::marker, ol > li::marker {
+  color: var(--mk-h3) !important;
+}
+
 code {
-  background-color: var(--md-inline-code-bg) !important;
-  font-family: JetBrains Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
-  font-size: 16px !important;
-  font-weight: 500 !important;
-  padding: 2px 6px !important;
+  color: var(--mk-inline-code-text) !important;
+  background-color: var(--mk-inline-code-bg) !important;
+  padding: 2px 7px !important;
   border-radius: 6px !important;
+  font-family: JetBrains Mono, monospace !important;
+  font-size: 0.9em !important;
   direction: ltr !important;
+  unicode-bidi: isolate !important;
   text-align: left !important;
-  color: var(--md-inline-code-text) !important;
 }
 
 pre {
-  background-color: var(--md-pre-bg) !important;
-  font-family: JetBrains Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
-  font-size: 16px !important;
-  font-weight: 500 !important;
-  line-height: 1.8 !important;
+  background-color: var(--mk-code-block-bg) !important;
+  color: var(--mk-text) !important;
+  font-family: JetBrains Mono, monospace !important;
+  font-size: 14px !important;
+  line-height: 1.7 !important;
   padding: 16px !important;
   border-radius: 10px !important;
+  border: 1px solid var(--mk-border) !important;
   overflow: auto !important;
   direction: ltr !important;
+  unicode-bidi: isolate !important;
   text-align: left !important;
   margin: 0 0 20px 0 !important;
-  color: var(--md-pre-text) !important;
+}
+
+pre code {
+  background: transparent !important;
+  color: inherit !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  border: none !important;
 }
 
 blockquote {
@@ -221,38 +299,21 @@ blockquote {
   direction: rtl !important;
   unicode-bidi: plaintext !important;
   text-align: right !important;
-  color: var(--md-blockquote-text) !important;
-  background-color: var(--md-blockquote-bg) !important;
-  border-inline-start: 3px solid var(--md-blockquote-border) !important;
-  padding: 14px 18px !important;
+  color: var(--mk-text) !important;
+  background-color: var(--mk-blockquote-bg, rgba(169, 220, 118, 0.06)) !important;
+  border-right: 4px solid var(--mk-blockquote) !important;
+  border-left: 0 !important;
+  border-inline-start: 4px solid var(--mk-blockquote) !important;
+  border-inline-end: 0 !important;
+  padding: 14px 1rem 14px 18px !important;
+  padding-right: 1rem !important;
+  border-radius: 4px !important;
   margin: 20px 0 !important;
-}
-
-blockquote::before {
-  position: absolute !important;
-  top: -6px !important;
-  inset-inline-start: -16px !important;
-  font-size: 18px !important;
-  line-height: 1 !important;
-  color: var(--md-blockquote-accent) !important;
-  pointer-events: none !important;
-}
-
-blockquote::after {
-  position: absolute !important;
-  width: 10px !important;
-  height: 10px !important;
-  inset-inline-start: -9px !important;
-  top: 8.5px !important;
-  border-inline-start: 2px solid var(--md-blockquote-accent) !important;
-  border-top: 2px solid var(--md-blockquote-accent) !important;
-  transform: skewY(-18deg) !important;
-  opacity: 0.8 !important;
 }
 
 blockquote p {
   margin: 0 0 10px 0 !important;
-  line-height: 1.9 !important;
+  line-height: 1.85 !important;
 }
 
 blockquote p:last-child {
@@ -260,88 +321,238 @@ blockquote p:last-child {
 }
 
 blockquote a {
-  color: var(--md-link) !important;
+  color: var(--mk-link) !important;
   text-decoration: underline !important;
   text-underline-offset: 0.15em !important;
   transition: color 150ms ease-in-out !important;
 }
 
 blockquote a:hover {
-  color: var(--md-link-hover) !important;
+  color: var(--mk-link-hover) !important;
   text-decoration-thickness: 2px !important;
 }
 
 blockquote code {
-  background-color: var(--md-inline-code-bg) !important;
-  border: 1px solid var(--md-code-border) !important;
-  color: var(--md-inline-code-text) !important;
-  font-family: JetBrains Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace !important;
+  background-color: var(--mk-inline-code-bg) !important;
+  border: 1px solid var(--mk-border) !important;
+  color: var(--mk-inline-code-text) !important;
+  font-family: JetBrains Mono, monospace !important;
   font-size: 14px !important;
-  padding: 2px 6px !important;
+  padding: 2px 7px !important;
   border-radius: 6px !important;
   direction: ltr !important;
   text-align: left !important;
 }
 
-.markdown-body, .markdown-body * {
-  font-family: Noto Sans;
+mark {
+  color: var(--mk-highlight) !important;
+  background-color: color-mix(in srgb, var(--mk-highlight) 18%, transparent) !important;
+  padding: 1px 4px !important;
+  border-radius: 3px !important;
 }
 
+small, .muted {
+  color: var(--mk-muted) !important;
+}
+
+hr {
+  border: 0 !important;
+  border-top: 1px solid var(--mk-border) !important;
+  margin: 24px 0 !important;
+}
+
+/* ── Markdown Body Scoped Rules ── */
 .markdown-body {
+  background-color: var(--mk-bg) !important;
+  color: var(--mk-text) !important;
   direction: rtl !important;
   unicode-bidi: plaintext !important;
   text-align: right !important;
+  font-family: "Vazirmatn", Noto Sans, sans-serif;
 }
 
-.markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6, .markdown-body p, .markdown-body li, .markdown-body blockquote {
+.markdown-body h1 {
+  color: var(--mk-h1) !important;
+  font-size: 1.85rem !important;
+  font-weight: 800 !important;
+  line-height: 1.35 !important;
+  margin: 24px 0 14px 0 !important;
+  text-align: start !important;
+}
+
+.markdown-body h2 {
+  color: var(--mk-h2) !important;
+  font-size: 1.55rem !important;
+  font-weight: 800 !important;
+  line-height: 1.4 !important;
+  margin: 20px 0 12px 0 !important;
+  text-align: start !important;
+}
+
+.markdown-body h3 {
+  color: var(--mk-h3) !important;
+  font-size: 1.35rem !important;
+  font-weight: 700 !important;
+  line-height: 1.45 !important;
+  margin: 18px 0 10px 0 !important;
+  text-align: start !important;
+}
+
+.markdown-body h4 {
+  color: var(--mk-h4) !important;
+  font-size: 1.2rem !important;
+  font-weight: 700 !important;
+  line-height: 1.5 !important;
+  margin: 16px 0 8px 0 !important;
+  text-align: start !important;
+}
+
+.markdown-body h5 {
+  color: var(--mk-h5) !important;
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  line-height: 1.55 !important;
+  margin: 14px 0 6px 0 !important;
+  text-align: start !important;
+}
+
+.markdown-body h6 {
+  color: var(--mk-h6) !important;
+  font-size: 1.0rem !important;
+  font-weight: 600 !important;
+  line-height: 1.6 !important;
+  margin: 12px 0 6px 0 !important;
+  text-align: start !important;
+}
+
+.markdown-body p {
+  color: var(--mk-text) !important;
+  font-family: "Vazirmatn", sans-serif !important;
+  line-height: 1.85 !important;
   direction: rtl !important;
   text-align: start !important;
+}
+
+.markdown-body strong, .markdown-body b {
+  color: var(--mk-bold) !important;
+  font-weight: 800 !important;
+}
+
+.markdown-body em, .markdown-body i {
+  color: var(--mk-italic) !important;
+  font-style: italic !important;
+}
+
+.markdown-body a {
+  color: var(--mk-link) !important;
+}
+
+.markdown-body a:hover {
+  color: var(--mk-link-hover) !important;
 }
 
 .markdown-body ul, .markdown-body ol {
   direction: rtl !important;
   text-align: right !important;
-  list-style-position: inside !important;
-  padding-inline-start: 0 !important;
-  padding-inline-end: 1.6em !important;
-  margin-inline-start: 0 !important;
+  list-style-position: outside !important;
+  margin-left: 8px !important;
+  padding-inline-start: 1.6em !important;
+  padding-inline-end: 0.6em !important;
 }
 
-blockquote, ul, ol {
-  text-align: right !important;
-  font-family: Noto Sans;
+.markdown-body li {
+  color: var(--mk-text) !important;
+  direction: rtl !important;
+  text-align: start !important;
 }
 
-code, code * {
+.markdown-body li::marker {
+  color: var(--mk-h3) !important;
+}
+
+.markdown-body code {
+  color: var(--mk-inline-code-text) !important;
+  background-color: var(--mk-inline-code-bg) !important;
+  padding: 2px 7px !important;
+  border-radius: 6px !important;
+  font-family: JetBrains Mono, monospace !important;
   direction: ltr !important;
-  text-align: left !important;
   unicode-bidi: isolate !important;
-  font-family: JetBrains Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  text-align: left !important;
 }
 
-pre, code, kbd, samp, tt, pre *, code *, .hljs, .token, .cm-editor, .monaco-editor, .markdown-body pre, .markdown-body code, .markdown-body kbd, .markdown-body samp {
+.markdown-body pre {
+  background-color: var(--mk-code-block-bg) !important;
+  border: 1px solid var(--mk-border) !important;
+  border-radius: 10px !important;
   direction: ltr !important;
-  text-align: left !important;
   unicode-bidi: isolate !important;
-  font-family: JetBrains Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  text-align: left !important;
 }
 
-[class='group flex min-w-0 flex-col'] > :first-child, [class='group flex min-w-0 flex-col'] > :first-child .text-left, [class='group flex min-w-0 flex-col'] > :first-child p, [class='group flex min-w-0 flex-col'] > :first-child h1, [class='group flex min-w-0 flex-col'] > :first-child h2, [class='group flex min-w-0 flex-col'] > :first-child h3, [class='group flex min-w-0 flex-col'] > :first-child h4, [class='group flex min-w-0 flex-col'] > :first-child h5, [class='group flex min-w-0 flex-col'] > :first-child h6, [class='group flex min-w-0 flex-col'] > :first-child ul, [class='group flex min-w-0 flex-col'] > :first-child ol, [class='group flex min-w-0 flex-col'] > :first-child li, [class='group flex min-w-0 flex-col'] > :first-child blockquote, [class='group flex min-w-0 flex-col'] > :first-child table, [class='group flex min-w-0 flex-col'] > :first-child thead, [class='group flex min-w-0 flex-col'] > :first-child tbody, [class='group flex min-w-0 flex-col'] > :first-child tr, [class='group flex min-w-0 flex-col'] > :first-child td, [class='group flex min-w-0 flex-col'] > :first-child th {
+.markdown-body blockquote {
+  border-right: 4px solid var(--mk-blockquote) !important;
+  border-inline-start: 4px solid var(--mk-blockquote) !important;
+  background-color: var(--mk-blockquote-bg, rgba(169, 220, 118, 0.06)) !important;
+  padding-right: 1rem !important;
+  padding-inline-start: 1rem !important;
+  border-radius: 4px !important;
+  color: var(--mk-text) !important;
+  direction: rtl !important;
+  text-align: start !important;
+}
+
+.markdown-body mark {
+  color: var(--mk-highlight) !important;
+}
+
+.markdown-body hr {
+  border-color: var(--mk-border) !important;
+}
+
+/* ── Container direction & isolation ── */
+[class="group flex min-w-0 flex-col"] > :first-child,
+[class="group flex min-w-0 flex-col"] > :first-child .text-left,
+[class="group flex min-w-0 flex-col"] > :first-child p,
+[class="group flex min-w-0 flex-col"] > :first-child h1,
+[class="group flex min-w-0 flex-col"] > :first-child h2,
+[class="group flex min-w-0 flex-col"] > :first-child h3,
+[class="group flex min-w-0 flex-col"] > :first-child h4,
+[class="group flex min-w-0 flex-col"] > :first-child h5,
+[class="group flex min-w-0 flex-col"] > :first-child h6,
+[class="group flex min-w-0 flex-col"] > :first-child ul,
+[class="group flex min-w-0 flex-col"] > :first-child ol,
+[class="group flex min-w-0 flex-col"] > :first-child li,
+[class="group flex min-w-0 flex-col"] > :first-child blockquote,
+[class="group flex min-w-0 flex-col"] > :first-child table,
+[class="group flex min-w-0 flex-col"] > :first-child thead,
+[class="group flex min-w-0 flex-col"] > :first-child tbody,
+[class="group flex min-w-0 flex-col"] > :first-child tr,
+[class="group flex min-w-0 flex-col"] > :first-child td,
+[class="group flex min-w-0 flex-col"] > :first-child th {
   direction: rtl !important;
   text-align: right !important;
   unicode-bidi: isolate !important;
   font-family: Vazirmatn, Noto Sans, sans-serif !important;
 }
 
-[class='group flex min-w-0 flex-col'] > :first-child ul, [class='group flex min-w-0 flex-col'] > :first-child ol {
+[class="group flex min-w-0 flex-col"] > :first-child ul,
+[class="group flex min-w-0 flex-col"] > :first-child ol {
   padding-left: 0 !important;
   padding-right: 1.5rem !important;
-  margin-left: 0 !important;
+  margin-left: 8px !important;
   margin-right: 0 !important;
   list-style-position: outside !important;
 }
 
-[class='group flex min-w-0 flex-col'] > :first-child pre, [class='group flex min-w-0 flex-col'] > :first-child pre *, [class='group flex min-w-0 flex-col'] > :first-child code, [class='group flex min-w-0 flex-col'] > :first-child code *, [class='group flex min-w-0 flex-col'] > :first-child .hljs, [class='group flex min-w-0 flex-col'] > :first-child [class*='language-'], [class='group flex min-w-0 flex-col'] > :first-child .vscode-markdown pre, [class='group flex min-w-0 flex-col'] > :first-child .vscode-markdown code {
+[class="group flex min-w-0 flex-col"] > :first-child pre,
+[class="group flex min-w-0 flex-col"] > :first-child pre *,
+[class="group flex min-w-0 flex-col"] > :first-child code,
+[class="group flex min-w-0 flex-col"] > :first-child code *,
+[class="group flex min-w-0 flex-col"] > :first-child .hljs,
+[class="group flex min-w-0 flex-col"] > :first-child [class*="language-"],
+[class="group flex min-w-0 flex-col"] > :first-child .vscode-markdown pre,
+[class="group flex min-w-0 flex-col"] > :first-child .vscode-markdown code {
   direction: ltr !important;
   text-align: left !important;
   unicode-bidi: isolate !important;
@@ -349,16 +560,16 @@ pre, code, kbd, samp, tt, pre *, code *, .hljs, .token, .cm-editor, .monaco-edit
 }
 
 /* Streaming reasoning is updated as character data, not only as new elements. */
-[data-testid='exploration-accordion-body'],
-[data-vazirmatn-flow='rtl'],
-[data-vazirmatn-flow='rtl'] * {
+[data-testid="exploration-accordion-body"],
+[data-vazirmatn-flow="rtl"],
+[data-vazirmatn-flow="rtl"] * {
   direction: rtl !important;
   text-align: right !important;
   unicode-bidi: plaintext !important;
 }
 
-[data-vazirmatn-flow='ltr'],
-[data-vazirmatn-flow='ltr'] * {
+[data-vazirmatn-flow="ltr"],
+[data-vazirmatn-flow="ltr"] * {
   direction: ltr !important;
   text-align: left !important;
   unicode-bidi: plaintext !important;
@@ -374,11 +585,11 @@ diffs-container, diffs-container *,
 [data-code], [data-code] *,
 [data-line-index], [data-line-index] *,
 [data-codex-terminal], [data-codex-terminal] *,
-[class*='code-snippet'], [class*='code-snippet'] *,
-[class*='code-editor'], [class*='code-editor'] *,
-[class*='diff_'], [class*='diff_'] *,
-[class*='diff-view'], [class*='diff-view'] *,
-[class*='patch-view'], [class*='patch-view'] * {
+[class*="code-snippet"], [class*="code-snippet"] *,
+[class*="code-editor"], [class*="code-editor"] *,
+[class*="diff_"], [class*="diff_"] *,
+[class*="diff-view"], [class*="diff-view"] *,
+[class*="patch-view"], [class*="patch-view"] * {
   direction: ltr !important;
   text-align: left !important;
   unicode-bidi: isolate !important;

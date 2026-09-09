@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.7
+
+- Implements full Monokai Pro syntax palette design tokens (`--mk-*`) across both dark and light themes.
+- Applies complete Markdown styling and typography specs across Codex webview chat stream and VS Code AI Chat.
+- Enhances styling for headings (H1-H6), blockquotes, lists, code blocks, and inline code with Persian typography integration.
+
 ## 1.0.6
 
 - Stores provider-specific API keys in `~/.codex/provider-tokens.json`, rather than the Codex-owned `auth.json` file.

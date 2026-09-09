@@ -133,6 +133,105 @@ ${R} {
   --vscode-font-family: ${fontStack};
 }
 
+/* ── Monokai Markdown Design Tokens (Light Theme Default) ── */
+:root {
+  --mk-bg: #FAF8F2;
+  --mk-text: #403E41;
+  --mk-h1: #D81B60;
+  --mk-h2: #E56B2F;
+  --mk-h3: #B88600;
+  --mk-h4: #4F8A10;
+  --mk-h5: #008C95;
+  --mk-h6: #7655B8;
+  --mk-bold: #272522;
+  --mk-italic: #7655B8;
+  --mk-link: #008C95;
+  --mk-link-hover: #4F8A10;
+  --mk-inline-code-text: #C2185B;
+  --mk-inline-code-bg: #F1EEE5;
+  --mk-code-block-bg: #F1EEE5;
+  --mk-blockquote: #4F8A10;
+  --mk-blockquote-bg: rgba(79, 138, 16, 0.06);
+  --mk-highlight: #D4A017;
+  --mk-muted: #78716C;
+  --mk-border: #D6D3D1;
+
+  --md-text: var(--mk-text);
+  --md-heading-1: var(--mk-h1);
+  --md-heading-2: var(--mk-h2);
+  --md-heading-3: var(--mk-h3);
+  --md-heading-4: var(--mk-h4);
+  --md-heading-5: var(--mk-h5);
+  --md-heading-6: var(--mk-h6);
+  --md-link: var(--mk-link);
+  --md-link-hover: var(--mk-link-hover);
+  --md-bold: var(--mk-bold);
+  --md-list: var(--mk-h3);
+  --md-inline-code-bg: var(--mk-inline-code-bg);
+  --md-inline-code-text: var(--mk-inline-code-text);
+  --md-pre-bg: var(--mk-code-block-bg);
+  --md-pre-text: var(--mk-text);
+  --md-blockquote-bg: var(--mk-blockquote-bg);
+  --md-blockquote-text: var(--mk-text);
+  --md-blockquote-border: var(--mk-blockquote);
+  --md-blockquote-accent: var(--mk-blockquote);
+  --md-code-border: var(--mk-border);
+}
+
+/* ── Monokai Markdown Design Tokens (Dark Theme) ── */
+body.vscode-dark,
+body.vscode-high-contrast,
+:root[data-theme="dark"],
+[data-vscode-theme-kind*="dark"],
+[data-vscode-theme-kind*="high-contrast"],
+.dark {
+  --mk-bg: #2D2A2E;
+  --mk-text: #FCFCFA;
+  --mk-h1: #FF6188;
+  --mk-h2: #FC9867;
+  --mk-h3: #FFD866;
+  --mk-h4: #A9DC76;
+  --mk-h5: #78DCE8;
+  --mk-h6: #AB9DF2;
+  --mk-bold: #FFFFFF;
+  --mk-italic: #AB9DF2;
+  --mk-link: #78DCE8;
+  --mk-link-hover: #A9DC76;
+  --mk-inline-code-text: #FFD866;
+  --mk-inline-code-bg: #221F22;
+  --mk-code-block-bg: #221F22;
+  --mk-blockquote: #A9DC76;
+  --mk-blockquote-bg: rgba(169, 220, 118, 0.06);
+  --mk-highlight: #FC9867;
+  --mk-muted: #939293;
+  --mk-border: #403E41;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not(.vscode-light) {
+    --mk-bg: #2D2A2E;
+    --mk-text: #FCFCFA;
+    --mk-h1: #FF6188;
+    --mk-h2: #FC9867;
+    --mk-h3: #FFD866;
+    --mk-h4: #A9DC76;
+    --mk-h5: #78DCE8;
+    --mk-h6: #AB9DF2;
+    --mk-bold: #FFFFFF;
+    --mk-italic: #AB9DF2;
+    --mk-link: #78DCE8;
+    --mk-link-hover: #A9DC76;
+    --mk-inline-code-text: #FFD866;
+    --mk-inline-code-bg: #221F22;
+    --mk-code-block-bg: #221F22;
+    --mk-blockquote: #A9DC76;
+    --mk-blockquote-bg: rgba(169, 220, 118, 0.06);
+    --mk-highlight: #FC9867;
+    --mk-muted: #939293;
+    --mk-border: #403E41;
+  }
+}
+
 /* ── Base direction ── */
 ${R},
 ${R} body,
@@ -345,9 +444,188 @@ ${R} ol {
 
 ${R} blockquote {
   border-left: 0 !important;
-  border-right: 3px solid var(--color-token-border);
+  border-right: 4px solid var(--mk-blockquote) !important;
+  border-inline-start: 4px solid var(--mk-blockquote) !important;
+  border-inline-end: 0 !important;
+  background-color: var(--mk-blockquote-bg, rgba(169, 220, 118, 0.06)) !important;
   padding-left: 0 !important;
-  padding-right: 1rem;
+  padding-right: 1rem !important;
+  padding-inline-start: 1rem !important;
+  padding-inline-end: 0 !important;
+  border-radius: 4px !important;
+}
+
+/* ── Monokai Markdown Syntax Palette & Typography Specs ── */
+${R} :is(
+  h1, .vscode-markdown h1, .markdown-body h1,
+  [class*="_markdownContent_"] h1, [data-thread-find-target="conversation"] h1
+) {
+  color: var(--mk-h1) !important;
+  font-size: 1.85rem !important;
+  font-weight: 800 !important;
+  line-height: 1.35 !important;
+  margin: 24px 0 14px 0 !important;
+  text-align: right !important;
+}
+
+${R} :is(
+  h2, .vscode-markdown h2, .markdown-body h2,
+  [class*="_markdownContent_"] h2, [data-thread-find-target="conversation"] h2
+) {
+  color: var(--mk-h2) !important;
+  font-size: 1.55rem !important;
+  font-weight: 800 !important;
+  line-height: 1.4 !important;
+  margin: 20px 0 12px 0 !important;
+  text-align: right !important;
+}
+
+${R} :is(
+  h3, .vscode-markdown h3, .markdown-body h3,
+  [class*="_markdownContent_"] h3, [data-thread-find-target="conversation"] h3
+) {
+  color: var(--mk-h3) !important;
+  font-size: 1.35rem !important;
+  font-weight: 700 !important;
+  line-height: 1.45 !important;
+  margin: 18px 0 10px 0 !important;
+  text-align: right !important;
+}
+
+${R} :is(
+  h4, .vscode-markdown h4, .markdown-body h4,
+  [class*="_markdownContent_"] h4, [data-thread-find-target="conversation"] h4
+) {
+  color: var(--mk-h4) !important;
+  font-size: 1.2rem !important;
+  font-weight: 700 !important;
+  line-height: 1.5 !important;
+  margin: 16px 0 8px 0 !important;
+  text-align: right !important;
+}
+
+${R} :is(
+  h5, .vscode-markdown h5, .markdown-body h5,
+  [class*="_markdownContent_"] h5, [data-thread-find-target="conversation"] h5
+) {
+  color: var(--mk-h5) !important;
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  line-height: 1.55 !important;
+  margin: 14px 0 6px 0 !important;
+  text-align: right !important;
+}
+
+${R} :is(
+  h6, .vscode-markdown h6, .markdown-body h6,
+  [class*="_markdownContent_"] h6, [data-thread-find-target="conversation"] h6
+) {
+  color: var(--mk-h6) !important;
+  font-size: 1.0rem !important;
+  font-weight: 600 !important;
+  line-height: 1.6 !important;
+  margin: 12px 0 6px 0 !important;
+  text-align: right !important;
+}
+
+${R} :is(
+  p, .vscode-markdown p, .markdown-body p,
+  [class*="_markdownContent_"] p, [data-thread-find-target="conversation"] p
+) {
+  font-family: "Vazirmatn", var(--vscode-font-family), system-ui, -apple-system, sans-serif !important;
+  line-height: 1.85 !important;
+  direction: rtl;
+  color: var(--mk-text);
+}
+
+${R} :is(
+  strong, b, .vscode-markdown strong, .vscode-markdown b,
+  .markdown-body strong, .markdown-body b, [class*="_markdownContent_"] strong, [class*="_markdownContent_"] b
+) {
+  color: var(--mk-bold) !important;
+  font-weight: 800 !important;
+}
+
+${R} :is(
+  em, i, .vscode-markdown em, .vscode-markdown i,
+  .markdown-body em, .markdown-body i, [class*="_markdownContent_"] em, [class*="_markdownContent_"] i
+) {
+  color: var(--mk-italic) !important;
+  font-style: italic !important;
+}
+
+${R} :is(
+  a, .vscode-markdown a, .markdown-body a,
+  [class*="_markdownContent_"] a, [data-thread-find-target="conversation"] a
+) {
+  color: var(--mk-link) !important;
+  font-weight: 600 !important;
+  text-underline-offset: 0.18em !important;
+  transition: color 150ms ease-in-out !important;
+}
+
+${R} :is(
+  a:hover, .vscode-markdown a:hover, .markdown-body a:hover,
+  [class*="_markdownContent_"] a:hover, [data-thread-find-target="conversation"] a:hover
+) {
+  color: var(--mk-link-hover) !important;
+  text-decoration-thickness: 2px !important;
+}
+
+${R} :is(
+  code:not(pre code), .vscode-markdown code:not(pre code),
+  .markdown-body code:not(pre code), [data-markdown-copy="inline-code"]
+) {
+  color: var(--mk-inline-code-text) !important;
+  background-color: var(--mk-inline-code-bg) !important;
+  padding: 2px 7px !important;
+  border-radius: 6px !important;
+  font-family: JetBrains Mono, monospace !important;
+  direction: ltr !important;
+  unicode-bidi: isolate !important;
+  text-align: left !important;
+}
+
+${R} :is(
+  pre, .vscode-markdown pre, .markdown-body pre, [data-markdown-copy="code-block"]
+) {
+  background-color: var(--mk-code-block-bg) !important;
+}
+
+${R} :is(
+  ul, ol, .vscode-markdown ul, .vscode-markdown ol,
+  .markdown-body ul, .markdown-body ol, [class*="_markdownContent_"] ul, [class*="_markdownContent_"] ol
+) {
+  margin-left: 8px !important;
+}
+
+${R} :is(
+  li, .vscode-markdown li, .markdown-body li,
+  [class*="_markdownContent_"] li, [data-thread-find-target="conversation"] li
+)::marker {
+  color: var(--mk-h3) !important;
+}
+
+${R} :is(
+  mark, .vscode-markdown mark, .markdown-body mark
+) {
+  color: var(--mk-highlight) !important;
+  background-color: color-mix(in srgb, var(--mk-highlight) 18%, transparent) !important;
+  border-radius: 3px !important;
+  padding: 1px 4px !important;
+}
+
+${R} :is(
+  small, .muted, .vscode-markdown small, .markdown-body small
+) {
+  color: var(--mk-muted) !important;
+}
+
+${R} :is(
+  hr, .vscode-markdown hr, .markdown-body hr
+) {
+  border: 0 !important;
+  border-top: 1px solid var(--mk-border) !important;
 }
 
 /* ── Input panel font ── */
@@ -2345,6 +2623,55 @@ function buildWorkbenchUiCss(fontStack, fontUrl, fontSize = 0) {
 
 :root {
   --codex-persian-font-family: ${fontStack};
+
+  /* ── Monokai Markdown Design Tokens (Light Theme Default) ── */
+  --mk-bg: #FAF8F2;
+  --mk-text: #403E41;
+  --mk-h1: #D81B60;
+  --mk-h2: #E56B2F;
+  --mk-h3: #B88600;
+  --mk-h4: #4F8A10;
+  --mk-h5: #008C95;
+  --mk-h6: #7655B8;
+  --mk-bold: #272522;
+  --mk-italic: #7655B8;
+  --mk-link: #008C95;
+  --mk-link-hover: #4F8A10;
+  --mk-inline-code-text: #C2185B;
+  --mk-inline-code-bg: #F1EEE5;
+  --mk-code-block-bg: #F1EEE5;
+  --mk-blockquote: #4F8A10;
+  --mk-blockquote-bg: rgba(79, 138, 16, 0.06);
+  --mk-highlight: #D4A017;
+  --mk-muted: #78716C;
+  --mk-border: #D6D3D1;
+}
+
+body.vscode-dark,
+body.vscode-high-contrast,
+:root[data-theme="dark"],
+[data-vscode-theme-kind*="dark"],
+[data-vscode-theme-kind*="high-contrast"] {
+  --mk-bg: #2D2A2E;
+  --mk-text: #FCFCFA;
+  --mk-h1: #FF6188;
+  --mk-h2: #FC9867;
+  --mk-h3: #FFD866;
+  --mk-h4: #A9DC76;
+  --mk-h5: #78DCE8;
+  --mk-h6: #AB9DF2;
+  --mk-bold: #FFFFFF;
+  --mk-italic: #AB9DF2;
+  --mk-link: #78DCE8;
+  --mk-link-hover: #A9DC76;
+  --mk-inline-code-text: #FFD866;
+  --mk-inline-code-bg: #221F22;
+  --mk-code-block-bg: #221F22;
+  --mk-blockquote: #A9DC76;
+  --mk-blockquote-bg: rgba(169, 220, 118, 0.06);
+  --mk-highlight: #FC9867;
+  --mk-muted: #939293;
+  --mk-border: #403E41;
 }
 
 /* ── VS Code AI Chat & Copilot Chat Markdown & Text Content ── */
@@ -2418,9 +2745,144 @@ function buildWorkbenchUiCss(fontStack, fontUrl, fontSize = 0) {
 .chat-widget .rendered-markdown blockquote,
 .chat-markdown-part blockquote,
 .rendered-markdown blockquote {
-  border-inline-start: 3px solid var(--vscode-textBlockQuote-border, #007acc) !important;
+  border-inline-start: 3px solid var(--mk-blockquote, var(--vscode-textBlockQuote-border, #007acc)) !important;
+  border-right: 4px solid var(--mk-blockquote) !important;
+  background-color: var(--mk-blockquote-bg, rgba(169, 220, 118, 0.06)) !important;
   padding-inline-start: 1rem !important;
   padding-inline-end: 0 !important;
+  border-radius: 4px !important;
+}
+
+/* ── Monokai Typography & Colors for AI Chat Markdown ── */
+.chat-markdown-part h1,
+.rendered-markdown h1 {
+  color: var(--mk-h1) !important;
+  font-size: 1.85rem !important;
+  font-weight: 800 !important;
+  line-height: 1.35 !important;
+  margin: 24px 0 14px 0 !important;
+}
+
+.chat-markdown-part h2,
+.rendered-markdown h2 {
+  color: var(--mk-h2) !important;
+  font-size: 1.55rem !important;
+  font-weight: 800 !important;
+  line-height: 1.4 !important;
+  margin: 20px 0 12px 0 !important;
+}
+
+.chat-markdown-part h3,
+.rendered-markdown h3 {
+  color: var(--mk-h3) !important;
+  font-size: 1.35rem !important;
+  font-weight: 700 !important;
+  line-height: 1.45 !important;
+  margin: 18px 0 10px 0 !important;
+}
+
+.chat-markdown-part h4,
+.rendered-markdown h4 {
+  color: var(--mk-h4) !important;
+  font-size: 1.2rem !important;
+  font-weight: 700 !important;
+  line-height: 1.5 !important;
+  margin: 16px 0 8px 0 !important;
+}
+
+.chat-markdown-part h5,
+.rendered-markdown h5 {
+  color: var(--mk-h5) !important;
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  line-height: 1.55 !important;
+  margin: 14px 0 6px 0 !important;
+}
+
+.chat-markdown-part h6,
+.rendered-markdown h6 {
+  color: var(--mk-h6) !important;
+  font-size: 1.0rem !important;
+  font-weight: 600 !important;
+  line-height: 1.6 !important;
+  margin: 12px 0 6px 0 !important;
+}
+
+.chat-markdown-part p,
+.rendered-markdown p {
+  line-height: 1.85 !important;
+}
+
+.chat-markdown-part strong,
+.chat-markdown-part b,
+.rendered-markdown strong,
+.rendered-markdown b {
+  color: var(--mk-bold) !important;
+  font-weight: 800 !important;
+}
+
+.chat-markdown-part em,
+.chat-markdown-part i,
+.rendered-markdown em,
+.rendered-markdown i {
+  color: var(--mk-italic) !important;
+  font-style: italic !important;
+}
+
+.chat-markdown-part a,
+.rendered-markdown a {
+  color: var(--mk-link) !important;
+  text-underline-offset: 0.18em !important;
+}
+
+.chat-markdown-part a:hover,
+.rendered-markdown a:hover {
+  color: var(--mk-link-hover) !important;
+}
+
+.chat-markdown-part code:not(pre code),
+.rendered-markdown code:not(pre code) {
+  color: var(--mk-inline-code-text) !important;
+  background-color: var(--mk-inline-code-bg) !important;
+  padding: 2px 7px !important;
+  border-radius: 6px !important;
+  font-family: JetBrains Mono, monospace !important;
+  direction: ltr !important;
+  unicode-bidi: isolate !important;
+  text-align: left !important;
+}
+
+.chat-markdown-part pre,
+.rendered-markdown pre {
+  background-color: var(--mk-code-block-bg) !important;
+}
+
+.interactive-session .rendered-markdown ol,
+.interactive-session .rendered-markdown ul,
+.chat-markdown-part ol,
+.chat-markdown-part ul,
+.rendered-markdown ol,
+.rendered-markdown ul {
+  margin-left: 8px !important;
+}
+
+.chat-markdown-part li::marker,
+.rendered-markdown li::marker {
+  color: var(--mk-h3) !important;
+}
+
+.chat-markdown-part mark,
+.rendered-markdown mark {
+  color: var(--mk-highlight) !important;
+  background-color: color-mix(in srgb, var(--mk-highlight) 18%, transparent) !important;
+  border-radius: 3px !important;
+  padding: 1px 4px !important;
+}
+
+.chat-markdown-part hr,
+.rendered-markdown hr {
+  border: 0 !important;
+  border-top: 1px solid var(--mk-border) !important;
 }
 
 /* ── AI Chat Composer & Monaco Input View Lines ── */
