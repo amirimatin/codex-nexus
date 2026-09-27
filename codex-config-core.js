@@ -568,10 +568,13 @@ const DEFAULT_OPENAI_MODELS = [
   "o4-mini"
 ];
 
-async function fetchProviderModelsFromConfig(filePath = defaultCodexConfigPath(), env = process.env, request = httpRequestJson) {
-  const config = readCodexModelConfig(filePath);
-  const provider = config.provider;
-  if (!provider || !provider.baseUrl) {
+async function fetchModelsForProvider(
+  providerId,
+  filePath = defaultCodexConfigPath(),
+  env = process.env,
+  request = httpRequestJson
+) {
+  if (!providerId || providerId === "openai") {
     const token = resolveProviderToken(filePath, "OPENAI_API_KEY", env, "openai");
     if (token) {
       try {
@@ -583,6 +586,20 @@ async function fetchProviderModelsFromConfig(filePath = defaultCodexConfigPath()
       }
     }
     return DEFAULT_OPENAI_MODELS;
+  }
+
+  const providers = readAllModelProviders(filePath);
+  let provider = providers.find((p) => p.id === providerId);
+
+  if (!provider) {
+    const config = readCodexModelConfig(filePath);
+    if (config.provider && config.provider.id === providerId) {
+      provider = config.provider;
+    }
+  }
+
+  if (!provider || !provider.baseUrl) {
+    throw new Error(`Provider "${providerId}" has no valid base URL configured.`);
   }
 
   const token = resolveProviderToken(filePath, provider.envKey, env, provider.id);
@@ -613,6 +630,45 @@ async function fetchProviderModelsFromConfig(filePath = defaultCodexConfigPath()
     throw error;
   }
   return [];
+}
+
+async function fetchProviderModelsFromConfig(
+  filePathOrProviderId = defaultCodexConfigPath(),
+  envOrFilePath = process.env,
+  requestOrEnv = httpRequestJson,
+  maybeRequest = httpRequestJson
+) {
+  if (
+    typeof filePathOrProviderId === "string" &&
+    !filePathOrProviderId.includes("/") &&
+    !filePathOrProviderId.includes("\\") &&
+    !filePathOrProviderId.endsWith(".toml")
+  ) {
+    const providerId = filePathOrProviderId;
+    const filePath = (typeof envOrFilePath === "string" && (envOrFilePath.includes("/") || envOrFilePath.includes("\\") || envOrFilePath.endsWith(".toml")))
+      ? envOrFilePath
+      : defaultCodexConfigPath();
+    const env = (typeof envOrFilePath === "object" && envOrFilePath !== null)
+      ? envOrFilePath
+      : ((typeof requestOrEnv === "object" && requestOrEnv !== null) ? requestOrEnv : process.env);
+    const request = typeof requestOrEnv === "function"
+      ? requestOrEnv
+      : (typeof maybeRequest === "function" ? maybeRequest : httpRequestJson);
+
+    return fetchModelsForProvider(providerId, filePath, env, request);
+  }
+
+  const filePath = typeof filePathOrProviderId === "string" ? filePathOrProviderId : defaultCodexConfigPath();
+  const env = (typeof envOrFilePath === "object" && envOrFilePath !== null) ? envOrFilePath : process.env;
+  const request = typeof requestOrEnv === "function" ? requestOrEnv : httpRequestJson;
+
+  const config = readCodexModelConfig(filePath);
+  const provider = config.provider;
+  if (!provider || !provider.baseUrl) {
+    return fetchModelsForProvider("openai", filePath, env, request);
+  }
+
+  return fetchModelsForProvider(provider.id, filePath, env, request);
 }
 
 function resolveProviderToken(configPath, envKey, env = process.env, providerId = null) {
@@ -725,6 +781,7 @@ module.exports = {
   defaultCodexConfigPath,
   buildModelsUrl,
   deleteModelProvider,
+  fetchModelsForProvider,
   fetchProviderModelsFromConfig,
   httpRequestJson,
   httpsRequestJson: httpRequestJson,
